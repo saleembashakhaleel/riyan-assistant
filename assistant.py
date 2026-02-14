@@ -191,14 +191,12 @@ def main():
     print("🧠 Starting Jarvis Reminder Engine...")
 
     app.job_queue.run_repeating(
-    reminder_job,
-    interval=60,
-    first=10
-)
+        reminder_job,
+        interval=60,
+        first=10
     )
 
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
