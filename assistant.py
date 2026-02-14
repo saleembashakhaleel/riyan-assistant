@@ -210,4 +210,13 @@ app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 print("Riyan is running in cloud...")
-app.run_polling()
+
+import asyncio
+
+async def main():
+    await app.initialize()
+    await app.start()
+    asyncio.create_task(reminder_checker(app))
+    await app.updater.start_polling()
+
+asyncio.run(main())
