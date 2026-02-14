@@ -213,10 +213,10 @@ print("Riyan is running in cloud...")
 
 import asyncio
 
-async def main():
-    await app.initialize()
-    await app.start()
-    asyncio.create_task(reminder_checker(app))
-    await app.updater.start_polling()
+async def post_init(application):
+    asyncio.create_task(reminder_checker(application))
 
-asyncio.run(main())
+app.post_init = post_init
+
+print("Riyan Jarvis Cloud Brain Activated...")
+app.run_polling()
