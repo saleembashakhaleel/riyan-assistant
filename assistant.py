@@ -4,6 +4,9 @@ from openai import OpenAI
 import os
 import json
 import sqlite3
+import re
+import pytz
+from datetime import datetime, timedelta
 
 # =========================
 # DATABASE
@@ -183,7 +186,7 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
     ist = pytz.timezone("Asia/Kolkata")
     now = datetime.now(ist).strftime("%H:%M")
 
-    print("CURRENT IST TIME:", now)   # keep this for testing
+    print("CURRENT IST TIME:", now)
 
     cursor.execute(
         "SELECT id, chat_id, text FROM reminders WHERE remind_time=?",
@@ -193,9 +196,9 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
     rows = cursor.fetchall()
 
     for r in rows:
+
         reminder_prompt = f"""
 You are Riyan, Saleem's personal AI companion.
-
 Speak naturally, calmly, and warmly.
 Keep it short and human, not robotic.
 
@@ -203,18 +206,20 @@ Create a gentle reminder message for:
 {r[2]}
 """
 
-response = client.responses.create(
-    model="gpt-4.1-mini",
-    input=reminder_prompt
-)
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=reminder_prompt
+        )
 
-reminder_reply = response.output[0].content[0].text
+        reminder_reply = response.output[0].content[0].text
 
-await context.bot.send_message(chat_id=r[1], text=reminder_reply)
+        await context.bot.send_message(
+            chat_id=r[1],
+            text=reminder_reply
+        )
 
         cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
         conn.commit()
-
 # ========================
 # START JARVIS CLOUD BRAIN
 # ========================
