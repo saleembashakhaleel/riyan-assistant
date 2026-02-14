@@ -189,7 +189,6 @@ import asyncio
 from datetime import datetime
 
 async def reminder_checker(application):
-    while True:
         now = datetime.now().strftime("%H:%M")
 
         cursor.execute("SELECT id, chat_id, text FROM reminders WHERE remind_time=?", (now,))
