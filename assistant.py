@@ -151,19 +151,31 @@ User said: {user_text}
     await update.message.reply_text(reply)
 
 # =========================
-# REMINDER CHECKER (WEBHOOK SAFE)
+# JARVIS REMINDER JOB (FIXED)
 # =========================
+from datetime import datetime
 
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
     now = datetime.now().strftime("%H:%M")
 
-    cursor.execute("SELECT id,chat_id,text FROM reminders WHERE remind_time=?", (now,))
+    cursor.execute(
+        "SELECT id, chat_id, text FROM reminders WHERE remind_time=?",
+        (now,)
+    )
+
     rows = cursor.fetchall()
 
     for r in rows:
-        await context.bot.send_message(chat_id=r[1], text=f"⏰ Reminder: {r[2]}")
-        cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
+        await context.bot.send_message(
+            chat_id=r[1],
+            text=f"⏰ Reminder: {r[2]}"
+        )
+
+        cursor.execute(
+            "DELETE FROM reminders WHERE id=?",
+            (r[0],)
+        )
         conn.commit()
 
 # ========================
@@ -179,9 +191,10 @@ def main():
     print("🧠 Starting Jarvis Reminder Engine...")
 
     app.job_queue.run_repeating(
-        lambda ctx: asyncio.create_task(reminder_checker(app)),
-        interval=60,
-        first=5
+    reminder_job,
+    interval=60,
+    first=10
+)
     )
 
     app.run_polling()
