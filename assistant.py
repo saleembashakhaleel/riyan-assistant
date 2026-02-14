@@ -50,6 +50,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_text = update.message.text.lower()
 
+# --- JARVIS INTENT RECOGNITION ---
+
+raw_text = update.message.text.lower()
+
+if raw_text.startswith("remember this") or raw_text.startswith("note this") or raw_text.startswith("save this"):
+    note_text = update.message.text.split(":",1)[-1].strip() if ":" in update.message.text else update.message.text
+    cursor.execute("INSERT INTO notes (text) VALUES (?)", (note_text,))
+    conn.commit()
+    await update.message.reply_text("🧠 Got it. I’ve saved that.")
+    return
+
     # --- JARVIS COMMAND ENGINE ---
 
     if user_text.startswith("riyan note"):
