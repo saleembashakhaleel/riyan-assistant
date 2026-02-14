@@ -5,7 +5,7 @@ import os
 import json
 import sqlite3
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # =========================
 # DATABASE
@@ -157,7 +157,8 @@ from datetime import datetime
 
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
-    now = datetime.now().strftime("%H:%M")
+    # Convert UTC → IST (+5:30)
+    now = (datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%H:%M")
 
     cursor.execute(
         "SELECT id, chat_id, text FROM reminders WHERE remind_time=?",
