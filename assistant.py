@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS reminders (
     remind_time TEXT
 )
 """)
+
 conn.commit()
 
 # =========================
@@ -39,7 +40,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # =========================
-# LONG TERM MEMORY
+# LONG TERM MEMORY FILE
 # =========================
 MEMORY_FILE = "memory.json"
 
@@ -57,9 +58,10 @@ def save_memory(data):
 long_term_memory = load_memory()
 
 # =========================
-# REMINDER ENGINE (FIXED)
+# REMINDER ENGINE (STABLE)
 # =========================
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
+
     now = datetime.now().strftime("%H:%M")
 
     cursor.execute(
@@ -85,7 +87,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_text = update.message.text.lower()
 
-    # ===== NOTES =====
+    # =====================
+    # NOTES
+    # =====================
     if user_text.startswith("remember this") or user_text.startswith("note this") or user_text.startswith("save this"):
         note_text = update.message.text
         cursor.execute("INSERT INTO notes (text) VALUES (?)", (note_text,))
@@ -107,7 +111,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Here’s what I remember:\n{memory}")
         return
 
-    # ===== REMINDER =====
+    # =====================
+    # REMINDER INTENT
+    # =====================
     reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", user_text)
 
     if reminder_match:
@@ -123,23 +129,72 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⏰ Reminder set for {reminder_time}")
         return
 
-    # ===== MEMORY CONTEXT =====
+    # =====================
+    # BUILD MEMORY CONTEXT
+    # =====================
     memory_text = ""
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
 
-    # ===== AI RESPONSE =====
+    # =====================
+    # JARVIS PERSONALITY + SALEEM PROFILE
+    # =====================
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=f"""
 You are Riyan, Saleem's personal AI companion.
 
-Speak calmly, warmly, and naturally.
-Keep replies short (2–3 sentences).
-Avoid robotic or therapist tone.
+--- SALEEM PROFILE MEMORY ---
+Name: Saleem
+Location: Chennai
 
-LONG TERM MEMORY:
+The assistant is named "Riyan" after Saleem’s son.
+Communicate with warmth, respect, and maturity.
+Do NOT pretend to be a real human.
+
+Career & Work:
+- Banking operations / custody domain
+- Cross-border payments expert
+- ISO20022 transition experience
+- Exploring AI automation
+
+Financial Mindset:
+- Long-term stability
+- Practical growth
+
+Lifestyle & Goals:
+- Fitness discipline
+- Emotional balance
+
+Communication Preference:
+- Calm
+- Grounded
+- Emotionally aware
+- Not dramatic
+- Not robotic
+
+Conversation Style:
+- 2–3 sentence responses
+- Natural language
+- Avoid therapist tone
+- Avoid motivational speeches
+- Gentle reflections before advice
+- Simple sentences
+- Quiet conversational presence
+
+Reflective Awareness:
+Use phrases like:
+"maybe it feels like..."
+"sounds like..."
+"could be that..."
+
+Response Presence:
+Short replies.
+Leave conversational space.
+Avoid long paragraphs.
+
+--- LONG TERM MEMORY ---
 {memory_text}
 
 User said: {user_text}
@@ -152,6 +207,7 @@ User said: {user_text}
         print("OPENAI ERROR:", e)
         reply = "⚠️ Riyan is having trouble connecting to AI right now."
 
+    # Save memory
     long_term_memory.append(f"Saleem: {user_text}")
     long_term_memory.append(f"Riyan: {reply}")
     save_memory(long_term_memory)
@@ -159,7 +215,7 @@ User said: {user_text}
     await update.message.reply_text(reply)
 
 # =========================
-# START BOT (FINAL STABLE)
+# START JARVIS CLOUD BRAIN
 # =========================
 def main():
 
@@ -170,7 +226,6 @@ def main():
     print("Riyan Jarvis Cloud Brain Activated...")
     print("🧠 Starting Jarvis Reminder Engine...")
 
-    # REAL FIXED JOB QUEUE
     app.job_queue.run_repeating(
         reminder_job,
         interval=60,
