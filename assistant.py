@@ -5,8 +5,8 @@ import os
 import json
 import sqlite3
 import re
-from datetime import datetime, timedelta
 import pytz
+from datetime import datetime, timedelta
 
 # =========================
 # DATABASE
@@ -89,6 +89,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
  
     # --- JARVIS REMINDER INTENT ---
+    import re
+    from datetime import datetime, timedelta
+    import pytz
+
     # ===== REMIND IN X MINUTES =====
     relative_match = re.search(r"remind me (.+) in (\d+)\s*minutes?", user_text)
 
