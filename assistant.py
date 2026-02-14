@@ -3,6 +3,17 @@ from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTyp
 from openai import OpenAI
 import os
 import json
+import sqlite3
+conn = sqlite3.connect("riyan_memory.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text TEXT
+)
+""")
+conn.commit()
 
 # =========================
 # ENV VARIABLES
@@ -36,7 +47,23 @@ long_term_memory = load_memory()
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global long_term_memory
 
-    user_text = update.message.text
+    user_text = update.message.text.lower()
+
+# --- JARVIS COMMAND ENGINE ---
+
+if user_text.startswith("riyan note"):
+    note_text = update.message.text[len("riyan note"):].strip()
+    cursor.execute("INSERT INTO notes (text) VALUES (?)", (note_text,))
+    conn.commit()
+    await update.message.reply_text("🧠 Noted. I’ll remember that.")
+    return
+
+if "what did i note" in user_text:
+    cursor.execute("SELECT text FROM notes ORDER BY id DESC LIMIT 5")
+    rows = cursor.fetchall()
+    memory = "\n".join([r[0] for r in rows]) if rows else "Nothing saved yet."
+    await update.message.reply_text(f"Here’s what I remember:\n{memory}")
+    return
 
     # Build memory context
     memory_text = ""
