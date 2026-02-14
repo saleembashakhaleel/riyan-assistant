@@ -10,6 +10,7 @@ from datetime import datetime
 # =========================
 # DATABASE
 # =========================
+
 conn = sqlite3.connect("riyan_memory.db", check_same_thread=False)
 cursor = conn.cursor()
 
@@ -28,78 +29,53 @@ CREATE TABLE IF NOT EXISTS reminders (
     remind_time TEXT
 )
 """)
-
 conn.commit()
 
 # =========================
-# ENV VARIABLES
+# ENV
 # =========================
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+
+WEBHOOK_URL = f"https://{RAILWAY_PUBLIC_DOMAIN}/{BOT_TOKEN}"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # =========================
-# LONG TERM MEMORY FILE
+# MEMORY
 # =========================
+
 MEMORY_FILE = "memory.json"
 
 def load_memory():
     try:
-        with open(MEMORY_FILE, "r") as f:
+        with open(MEMORY_FILE,"r") as f:
             return json.load(f)
     except:
         return []
 
 def save_memory(data):
-    with open(MEMORY_FILE, "w") as f:
-        json.dump(data, f)
+    with open(MEMORY_FILE,"w") as f:
+        json.dump(data,f)
 
 long_term_memory = load_memory()
 
 # =========================
-# REMINDER ENGINE (STABLE)
+# MESSAGE HANDLER
 # =========================
-async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
-    now = datetime.now().strftime("%H:%M")
-
-    cursor.execute(
-        "SELECT id, chat_id, text FROM reminders WHERE remind_time=?",
-        (now,)
-    )
-    rows = cursor.fetchall()
-
-    for r in rows:
-        await context.bot.send_message(
-            chat_id=r[1],
-            text=f"⏰ Reminder: {r[2]}"
-        )
-        cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
-        conn.commit()
-
-# =========================
-# TELEGRAM HANDLER
-# =========================
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     global long_term_memory
 
     user_text = update.message.text.lower()
 
-    # =====================
-    # NOTES
-    # =====================
-    if user_text.startswith("remember this") or user_text.startswith("note this") or user_text.startswith("save this"):
-        note_text = update.message.text
-        cursor.execute("INSERT INTO notes (text) VALUES (?)", (note_text,))
-        conn.commit()
-        await update.message.reply_text("🧠 Got it. I’ve saved that.")
-        return
-
+    # -------- SAVE NOTES --------
     if user_text.startswith("riyan note"):
         note_text = update.message.text[len("riyan note"):].strip()
-        cursor.execute("INSERT INTO notes (text) VALUES (?)", (note_text,))
+        cursor.execute("INSERT INTO notes(text) VALUES(?)",(note_text,))
         conn.commit()
         await update.message.reply_text("🧠 Noted. I’ll remember that.")
         return
@@ -111,9 +87,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Here’s what I remember:\n{memory}")
         return
 
-    # =====================
-    # REMINDER INTENT
-    # =====================
+    # -------- REMINDER ENGINE --------
     reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", user_text)
 
     if reminder_match:
@@ -121,7 +95,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reminder_time = reminder_match.group(2)
 
         cursor.execute(
-            "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
+            "INSERT INTO reminders(chat_id,text,remind_time) VALUES(?,?,?)",
             (str(update.message.chat_id), reminder_text, reminder_time)
         )
         conn.commit()
@@ -129,16 +103,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⏰ Reminder set for {reminder_time}")
         return
 
-    # =====================
-    # BUILD MEMORY CONTEXT
-    # =====================
+    # -------- AI RESPONSE --------
     memory_text = ""
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
 
-    # =====================
-    # JARVIS PERSONALITY + SALEEM PROFILE
-    # =====================
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
@@ -148,51 +117,19 @@ You are Riyan, Saleem's personal AI companion.
 --- SALEEM PROFILE MEMORY ---
 Name: Saleem
 Location: Chennai
+Assistant name inspired by his son Riyan.
 
-The assistant is named "Riyan" after Saleem’s son.
-Communicate with warmth, respect, and maturity.
-Do NOT pretend to be a real human.
-
-Career & Work:
-- Banking operations / custody domain
-- Cross-border payments expert
-- ISO20022 transition experience
+Career:
+- Banking custody & cross-border payments
+- ISO20022 migration experience
 - Exploring AI automation
 
-Financial Mindset:
-- Long-term stability
-- Practical growth
-
-Lifestyle & Goals:
-- Fitness discipline
-- Emotional balance
-
-Communication Preference:
+Communication Style:
 - Calm
 - Grounded
-- Emotionally aware
-- Not dramatic
-- Not robotic
-
-Conversation Style:
-- 2–3 sentence responses
-- Natural language
-- Avoid therapist tone
-- Avoid motivational speeches
-- Gentle reflections before advice
-- Simple sentences
-- Quiet conversational presence
-
-Reflective Awareness:
-Use phrases like:
-"maybe it feels like..."
-"sounds like..."
-"could be that..."
-
-Response Presence:
-Short replies.
-Leave conversational space.
-Avoid long paragraphs.
+- Human-like but not dramatic
+- Short natural responses (2–3 sentences)
+- Reflect first, advise second
 
 --- LONG TERM MEMORY ---
 {memory_text}
@@ -204,10 +141,9 @@ User said: {user_text}
         reply = response.output[0].content[0].text
 
     except Exception as e:
-        print("OPENAI ERROR:", e)
-        reply = "⚠️ Riyan is having trouble connecting to AI right now."
+        print("OPENAI ERROR:",e)
+        reply = "⚠️ Riyan is having trouble connecting right now."
 
-    # Save memory
     long_term_memory.append(f"Saleem: {user_text}")
     long_term_memory.append(f"Riyan: {reply}")
     save_memory(long_term_memory)
@@ -215,24 +151,42 @@ User said: {user_text}
     await update.message.reply_text(reply)
 
 # =========================
-# START JARVIS CLOUD BRAIN
+# REMINDER CHECKER (WEBHOOK SAFE)
 # =========================
+
+async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
+
+    now = datetime.now().strftime("%H:%M")
+
+    cursor.execute("SELECT id,chat_id,text FROM reminders WHERE remind_time=?", (now,))
+    rows = cursor.fetchall()
+
+    for r in rows:
+        await context.bot.send_message(chat_id=r[1], text=f"⏰ Reminder: {r[2]}")
+        cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
+        conn.commit()
+
+# =========================
+# START JARVIS CLOUD
+# =========================
+
 def main():
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Riyan Jarvis Cloud Brain Activated...")
-    print("🧠 Starting Jarvis Reminder Engine...")
+    print("Riyan Jarvis Webhook Brain Activated...")
 
-    app.job_queue.run_repeating(
-        reminder_job,
-        interval=60,
-        first=5
+    # 🔥 THIS IS THE FIXED REMINDER ENGINE
+    app.job_queue.run_repeating(reminder_job, interval=60, first=10)
+
+    # 🔥 WEBHOOK MODE (NO POLLING CONFLICTS EVER AGAIN)
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=8080,
+        webhook_url=WEBHOOK_URL
     )
-
-    app.run_polling()
 
 if __name__ == "__main__":
     main()
