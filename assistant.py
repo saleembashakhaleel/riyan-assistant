@@ -202,18 +202,28 @@ async def reminder_checker(application):
 
         await asyncio.sleep(60)
 
-# =========================
-# START BOT (JARVIS ENGINE)
-# =========================
+# ========================
+# START BOT
+# ========================
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+async def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-async def on_startup(app):
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("Riyan Jarvis Cloud Brain Activated...")
     print("🧠 Starting Jarvis Reminder Engine...")
-    asyncio.create_task(reminder_checker(app))
 
-app.post_init = on_startup
+    # Start reminder loop INSIDE event loop
+    app.job_queue.run_repeating(lambda ctx: asyncio.create_task(reminder_checker(app)), interval=60, first=5)
 
-print("Riyan Jarvis Cloud Brain Activated...")
-app.run_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+
+    # Keep bot alive forever
+    while True:
+        await asyncio.sleep(3600)
+
+import asyncio
+asyncio.run(main())
