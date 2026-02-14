@@ -166,12 +166,11 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
         cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
         conn.commit()
 
-# =========================
-# START JARVIS CLOUD
-# =========================
+# ========================
+# START JARVIS CLOUD BRAIN
+# ========================
 
 def main():
-
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -179,8 +178,14 @@ def main():
     print("Riyan Jarvis Cloud Brain Activated...")
     print("🧠 Starting Jarvis Reminder Engine...")
 
-    # ✅ Stable reminder scheduler
-    app.job_queue.run_repeating(reminder_job, interval=60, first=10)
+    app.job_queue.run_repeating(
+        lambda ctx: asyncio.create_task(reminder_checker(app)),
+        interval=60,
+        first=5
+    )
 
-    # ✅ SAFE polling mode (NO asyncio.run, NO webhook)
-    app.run_polling(drop_pending_updates=True)
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()
