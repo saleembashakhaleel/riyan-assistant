@@ -4,6 +4,21 @@ from openai import OpenAI
 
 import os
 
+import json
+
+MEMORY_FILE = "memory.json"
+
+def load_memory():
+    try:
+        with open(MEMORY_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_memory(data):
+    with open(MEMORY_FILE, "w") as f:
+        json.dump(data, f)
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -15,8 +30,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
-            input=f"""
+            memory_text = ""
+for m in long_term_memory[-10:]:
+    memory_text += f"{m}\n"
+
+input=f"""
 You are Riyan, Saleem's personal AI companion.
+
+--- SALEEM PROFILE MEMORY ---
+(keep your full profile block here exactly as it is)
+
+--- LONG TERM MEMORY ---
+{memory_text}
+
+User said: {user_text}
+"""
 
 --- SALEEM PROFILE MEMORY ---
 Name: Saleem
@@ -56,6 +84,15 @@ User said: {user_text}
         )
 
         reply = response.output[0].content[0].text
+
+# Save conversation into memory
+conversation_memory.append(f"Saleem: {user_text}")
+conversation_memory.append(f"Riyan: {reply}")
+
+# Limit memory size
+if len(conversation_memory) > MAX_MEMORY:
+    conversation_memory.pop(0)
+    conversation_memory.pop(0)
 
     except Exception as e:
         print("OPENAI ERROR:", e)
