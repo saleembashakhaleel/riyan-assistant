@@ -202,12 +202,10 @@ async def reminder_checker(application):
         await asyncio.sleep(60)
 
 # ========================
-# START BOT
+# START JARVIS CLOUD BRAIN
 # ========================
 
-import asyncio
-
-async def main():
+def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -222,6 +220,8 @@ async def main():
         first=5
     )
 
-    await app.run_polling()
+    # IMPORTANT: DO NOT USE asyncio.run()
+    app.run_polling()
 
-asyncio.run(main())
+if __name__ == "__main__":
+    main()
