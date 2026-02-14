@@ -176,17 +176,11 @@ def main():
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Riyan Jarvis Webhook Brain Activated...")
+    print("Riyan Jarvis Cloud Brain Activated...")
+    print("🧠 Starting Jarvis Reminder Engine...")
 
-    # 🔥 THIS IS THE FIXED REMINDER ENGINE
+    # ✅ Stable reminder scheduler
     app.job_queue.run_repeating(reminder_job, interval=60, first=10)
 
-    # 🔥 WEBHOOK MODE (NO POLLING CONFLICTS EVER AGAIN)
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=8080,
-        webhook_url=WEBHOOK_URL
-    )
-
-if __name__ == "__main__":
-    main()
+    # ✅ SAFE polling mode (NO asyncio.run, NO webhook)
+    app.run_polling(drop_pending_updates=True)
