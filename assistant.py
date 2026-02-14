@@ -89,6 +89,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # -------- REMINDER ENGINE --------
+
+    # --- JARVIS NATURAL TIME REMINDER (in X minutes) ---
+
+relative_match = re.search(r"remind me (.+) in (\d+)\s*minutes?", user_text)
+
+if relative_match:
+    from datetime import datetime, timedelta
+    import pytz
+
+    reminder_text = relative_match.group(1)
+    minutes = int(relative_match.group(2))
+
+    ist = pytz.timezone("Asia/Kolkata")
+    future_time = (datetime.now(ist) + timedelta(minutes=minutes)).strftime("%H:%M")
+
+    cursor.execute(
+        "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
+        (str(update.message.chat_id), reminder_text, future_time)
+    )
+    conn.commit()
+
+    await update.message.reply_text(f"⏰ Got it. I’ll remind you in {minutes} minutes.")
+    return
     reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", user_text)
 
     if reminder_match:
@@ -171,10 +194,24 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
     rows = cursor.fetchall()
 
     for r in rows:
-        await context.bot.send_message(
-            chat_id=r[1],
-            text=f"⏰ Reminder: {r[2]}"
-        )
+        reminder_prompt = f"""
+You are Riyan, Saleem's personal AI companion.
+
+Speak naturally, calmly, and warmly.
+Keep it short and human, not robotic.
+
+Create a gentle reminder message for:
+{r[2]}
+"""
+
+response = client.responses.create(
+    model="gpt-4.1-mini",
+    input=reminder_prompt
+)
+
+reminder_reply = response.output[0].content[0].text
+
+await context.bot.send_message(chat_id=r[1], text=reminder_reply)
 
         cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
         conn.commit()
