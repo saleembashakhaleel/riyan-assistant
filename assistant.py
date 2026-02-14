@@ -15,6 +15,16 @@ CREATE TABLE IF NOT EXISTS notes (
 """)
 conn.commit()
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chat_id TEXT,
+    text TEXT,
+    remind_time TEXT
+)
+""")
+conn.commit()
+
 # =========================
 # ENV VARIABLES
 # =========================
@@ -59,6 +69,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn.commit()
         await update.message.reply_text("🧠 Got it. I’ve saved that.")
         return
+
+    # --- JARVIS REMINDER INTENT ---
+
+import re
+from datetime import datetime
+
+reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", raw_text)
+
+    if reminder_match:
+        reminder_text = reminder_match.group(1)
+        reminder_time = reminder_match.group(2)
+
+    cursor.execute(
+        "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?, ?, ?)",
+        (str(update.message.chat_id), reminder_text, reminder_time)
+    )
+    conn.commit()
+
+    await update.message.reply_text(f"⏰ Reminder set for {reminder_time}.")
+    return
+
 
     # --- JARVIS COMMAND ENGINE ---
 
@@ -154,6 +185,23 @@ User said: {user_text}
     save_memory(long_term_memory)
 
     await update.message.reply_text(reply)
+
+import asyncio
+from datetime import datetime
+
+async def reminder_checker(application):
+    while True:
+        now = datetime.now().strftime("%H:%M")
+
+        cursor.execute("SELECT id, chat_id, text FROM reminders WHERE remind_time=?", (now,))
+        rows = cursor.fetchall()
+
+        for r in rows:
+            await application.bot.send_message(chat_id=r[1], text=f"⏰ Reminder: {r[2]}")
+            cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
+            conn.commit()
+
+        await asyncio.sleep(60)
 
 # =========================
 # START BOT
