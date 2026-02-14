@@ -203,19 +203,17 @@ async def reminder_checker(application):
         await asyncio.sleep(60)
 
 # =========================
-# START BOT
+# START BOT (JARVIS ENGINE)
 # =========================
+
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-print("Riyan is running in cloud...")
+async def on_startup(app):
+    print("🧠 Starting Jarvis Reminder Engine...")
+    asyncio.create_task(reminder_checker(app))
 
-import asyncio
-
-async def post_init(application):
-    asyncio.create_task(reminder_checker(application))
-
-app.post_init = post_init
+app.post_init = on_startup
 
 print("Riyan Jarvis Cloud Brain Activated...")
 app.run_polling()
