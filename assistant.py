@@ -72,10 +72,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # --- JARVIS REMINDER INTENT ---
 
-import re
-from datetime import datetime
+    import re
+    from datetime import datetime
 
-reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", raw_text)
+    reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", raw_text)
 
     if reminder_match:
         reminder_text = reminder_match.group(1)
