@@ -217,6 +217,13 @@ User said: {user_text}
 
     await update.message.reply_text(reply)
 
+    # --- SMART MEMORY SAFE MODE ---
+    memory_keywords = ["i want", "i need", "i feel", "my goal", "i plan", "i will"]
+
+    if any(k in user_text for k in memory_keywords) and len(user_text.split()) > 4:
+        long_term_memory.append(f"[MEMORY] Saleem: {user_text}")
+        save_memory(long_term_memory)
+
 # =========================
 # JARVIS REMINDER JOB (FIXED)
 # =========================
