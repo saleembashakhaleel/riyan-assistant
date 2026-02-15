@@ -150,7 +150,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # -------- AI RESPONSE --------   
+    # -------- AI RESPONSE --------
     memory_text = ""
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
