@@ -168,6 +168,24 @@ Communication Style:
 --- LONG TERM MEMORY ---
 {memory_text}
 
+
+# --- CONTEXT AWARE PRESENCE (Jarvis Phase-2) ---
+
+import pytz
+from datetime import datetime
+
+ist = pytz.timezone("Asia/Kolkata")
+hour_now = datetime.now(ist).hour
+
+if hour_now >= 22 or hour_now <= 5:
+    time_context = "Late night. Speak softer, slower, and more minimal."
+elif 9 <= hour_now <= 18:
+    time_context = "Work hours. Be practical, concise, and grounded."
+else:
+    time_context = "Evening personal time. Be calm, friendly, and relaxed."
+
+
+
 User said: {user_text}
 """
         )
