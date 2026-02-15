@@ -117,7 +117,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
 
 
-elif relative_match:
+    if relative_match:
 
     reminder_text = relative_match.group(1)
     minutes = int(relative_match.group(2))
