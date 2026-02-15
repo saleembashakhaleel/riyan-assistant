@@ -126,15 +126,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reminder_time = future_time.strftime("%H:%M")
 
         cursor.execute(
-        "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
-        (str(update.message.chat_id), reminder_text, reminder_time)
+            "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
+            (str(update.message.chat_id), reminder_text, reminder_time)
         )
         conn.commit()
 
-    await update.message.reply_text(
+        await update.message.reply_text(
         f"⏰ Got it — I’ll remind you in {minutes} minute(s)."
-    )
-    return
+        )
+        return
 
 
     # --- JARVIS POWER COMMANDS (Phase-2) ---
