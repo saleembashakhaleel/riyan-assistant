@@ -276,13 +276,10 @@ def main():
     print("Riyan Jarvis Cloud Brain Activated...")
     print("🧠 Starting Jarvis Reminder Engine...")
 
-    app.job_queue.run_repeating(
-        reminder_job,
-        interval=60,
-        first=10
-    )
+    app.job_queue.run_repeating(reminder_job, interval=60, first=5)
 
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
