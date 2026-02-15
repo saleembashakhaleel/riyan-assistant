@@ -150,25 +150,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    # -------- AI RESPONSE --------    # --- SMART MEMORY ENGINE (Jarvis Phase-2) ---
-
-    #important_patterns = [
-        #"I have",
-        #"I need to",
-        #"I want to",
-        #"I feel",
-        #"my goal",
-        #"I will",
-        #"I plan",
-        #"I am working on",
-    #]
-
-    #should_store = any(p in user_text for p in important_patterns)
-
-    # avoid storing commands or very short lines
-    #if should_store and len(user_text.split()) > 4:
-        #long_term_memory.append(f"[MEMORY] Saleem: {user_text}")
-        #save_memory(long_term_memory)    # Build memory context
+    # -------- AI RESPONSE --------   
     memory_text = ""
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
