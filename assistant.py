@@ -137,6 +137,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
 
 
+    # --- JARVIS POWER COMMANDS (Phase-2) ---
+
+    if "summarise this" in user_text or "summarize this" in user_text:
+        await update.message.reply_text("🧠 Give me the text you want summarised.")
+        return
+
+    if "plan my day" in user_text:
+        await update.message.reply_text(
+            "Alright… tell me your main priorities today and I’ll help structure it."
+        )
+        return
+
+
     # -------- AI RESPONSE --------
     memory_text = ""
     for m in long_term_memory[-12:]:
@@ -165,25 +178,30 @@ Communication Style:
 - Short natural responses (2–3 sentences)
 - Reflect first, advise second
 
+
 --- LONG TERM MEMORY ---
 {memory_text}
 
+--- TIME CONTEXT ---
+{time_context}
 
-# --- CONTEXT AWARE PRESENCE (Jarvis Phase-2) ---
+User said: {user_text}
 
-import pytz
-from datetime import datetime
 
-ist = pytz.timezone("Asia/Kolkata")
-hour_now = datetime.now(ist).hour
+    # --- CONTEXT AWARE PRESENCE (Jarvis Phase-2) ---
 
-if hour_now >= 22 or hour_now <= 5:
-    time_context = "Late night. Speak softer, slower, and more minimal."
-elif 9 <= hour_now <= 18:
-    time_context = "Work hours. Be practical, concise, and grounded."
-else:
-    time_context = "Evening personal time. Be calm, friendly, and relaxed."
+    import pytz
+    from datetime import datetime
 
+    ist = pytz.timezone("Asia/Kolkata")
+    hour_now = datetime.now(ist).hour
+
+    if hour_now >= 22 or hour_now <= 5:
+        time_context = "Late night. Speak softer, slower, and more minimal."
+    elif 9 <= hour_now <= 18:
+        time_context = "Work hours. Be practical, concise, and grounded."
+    else:
+        time_context = "Evening personal time. Be calm, friendly, and relaxed."
 
 
 User said: {user_text}
