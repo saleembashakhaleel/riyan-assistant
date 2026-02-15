@@ -182,9 +182,6 @@ Communication Style:
 --- LONG TERM MEMORY ---
 {memory_text}
 
---- TIME CONTEXT ---
-{time_context}
-
 User said: {user_text}
 
 
