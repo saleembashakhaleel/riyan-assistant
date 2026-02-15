@@ -89,45 +89,51 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
  
     # --- JARVIS REMINDER INTENT ---
+
     import re
-    from datetime import datetime, timedelta
     import pytz
+    from datetime import datetime, timedelta
 
-    # ===== REMIND IN X MINUTES =====
-    relative_match = re.search(r"remind me (.+) in (\d+)\s*minutes?", user_text)
+    ist = pytz.timezone("Asia/Kolkata")
 
-    if relative_match:
-        reminder_text = relative_match.group(1)
-        minutes = int(relative_match.group(2))
-
-        ist = pytz.timezone("Asia/Kolkata")
-        future_time = (datetime.now(ist) + timedelta(minutes=minutes)).strftime("%H:%M")
-
-        cursor.execute(
-            "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
-            (str(update.message.chat_id), reminder_text, future_time)
-        )
-        conn.commit()
-
-        await update.message.reply_text(f"⏰ Got it. I’ll remind you in {minutes} minutes.")
-        return
-
-
-    # ===== REMIND AT HH:MM =====
+    # 1️⃣ EXACT TIME (existing behavior)
     reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", user_text)
 
+    # 2️⃣ RELATIVE TIME (NEW)
+    relative_match = re.search(r"remind me (.+) in (\d+) (minute|minutes|min)", user_text)
+
     if reminder_match:
+
         reminder_text = reminder_match.group(1)
         reminder_time = reminder_match.group(2)
 
-        cursor.execute(
-            "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
-            (str(update.message.chat_id), reminder_text, reminder_time)
-        )
-        conn.commit()
+    cursor.execute(
+        "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
+        (str(update.message.chat_id), reminder_text, reminder_time)
+    )
+    conn.commit()
 
-        await update.message.reply_text(f"⏰ Reminder set for {reminder_time}")
-        return
+    await update.message.reply_text(f"⏰ Reminder set for {reminder_time}")
+    return
+
+
+elif relative_match:
+
+    reminder_text = relative_match.group(1)
+    minutes = int(relative_match.group(2))
+
+    future_time = datetime.now(ist) + timedelta(minutes=minutes)
+    reminder_time = future_time.strftime("%H:%M")
+
+    cursor.execute(
+        "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
+        (str(update.message.chat_id), reminder_text, reminder_time)
+    )
+    conn.commit()
+
+    await update.message.reply_text(f"⏰ Got it — I’ll remind you in {minutes} minute(s).")
+    return
+
 
     # -------- AI RESPONSE --------
     memory_text = ""
