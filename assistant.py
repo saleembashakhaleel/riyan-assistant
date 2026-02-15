@@ -107,31 +107,33 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reminder_text = reminder_match.group(1)
         reminder_time = reminder_match.group(2)
 
-    cursor.execute(
+        cursor.execute(
         "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
         (str(update.message.chat_id), reminder_text, reminder_time)
-    )
-    conn.commit()
+        )
+        conn.commit()
 
-    await update.message.reply_text(f"⏰ Reminder set for {reminder_time}")
-    return
+        await update.message.reply_text(f"⏰ Reminder set for {reminder_time}")
+        return
 
 
+    # --- RELATIVE TIME REMINDER (Jarvis NLP) ---
     if relative_match:
+        reminder_text = relative_match.group(1)
+        minutes = int(relative_match.group(2))
 
-    reminder_text = relative_match.group(1)
-    minutes = int(relative_match.group(2))
+        future_time = datetime.now(ist) + timedelta(minutes=minutes)
+        reminder_time = future_time.strftime("%H:%M")
 
-    future_time = datetime.now(ist) + timedelta(minutes=minutes)
-    reminder_time = future_time.strftime("%H:%M")
-
-    cursor.execute(
+        cursor.execute(
         "INSERT INTO reminders (chat_id, text, remind_time) VALUES (?,?,?)",
         (str(update.message.chat_id), reminder_text, reminder_time)
-    )
-    conn.commit()
+        )
+        conn.commit()
 
-    await update.message.reply_text(f"⏰ Got it — I’ll remind you in {minutes} minute(s).")
+    await update.message.reply_text(
+        f"⏰ Got it — I’ll remind you in {minutes} minute(s)."
+    )
     return
 
 
