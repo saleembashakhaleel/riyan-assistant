@@ -155,11 +155,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
 
+    # --- JARVIS REAL TIME CONTEXT ---
+    import pytz
+    from datetime import datetime
+
+    ist = pytz.timezone("Asia/Kolkata")
+    time_context = datetime.now(ist).strftime("%I:%M %p")
+
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=f"""
 You are Riyan, Saleem's personal AI companion.
+
+--- CURRENT CONTEXT ---
+Current IST Time: {time_context}
+Location: Chennai
 
 --- SALEEM PROFILE MEMORY ---
 Name: Saleem
