@@ -205,6 +205,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
 
+    # --- LANGUAGE DETECTION ---
+    detected_lang = detect_script(user_text)
+
     # --- JARVIS REAL TIME CONTEXT ---
     import pytz
     from datetime import datetime
