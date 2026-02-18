@@ -105,8 +105,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     lang_instruction = ""
 
-    if script == "latin":
-        lang_instruction = "Reply ONLY in English unless Abba mixes languages."
+    urdu_hindi_words = [
+        "abhi","hai","kya","lag","raha","hoon","kar","mein","tum",
+        "kyun","acha","thoda","nahi","haan","kaise","yaar"
+    ]
+
+    if detected_lang == "latin":
+
+        # Check if Abba is actually speaking Roman Urdu/Hindi
+        if any(word in user_text.lower() for word in urdu_hindi_words):
+            lang_instruction = "Reply in natural Roman Urdu/Hindi mix like Abba speaks."
+        else:
+            lang_instruction = "Reply ONLY in English unless Abba mixes languages."
+
     elif script == "tamil":
         lang_instruction = "Reply in casual Chennai Tamil."
     elif script == "perso-arabic":
