@@ -101,6 +101,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         language_hint = "Reply using the same Roman (Latin) script as Abba uses."
 
+    # --- STRICT LANGUAGE LOCK (Jarvis Fix) ---
+
+    lang_instruction = ""
+
+    if script == "latin":
+        lang_instruction = "Reply ONLY in English unless Abba mixes languages."
+    elif script == "tamil":
+        lang_instruction = "Reply in casual Chennai Tamil."
+    elif script == "perso-arabic":
+        lang_instruction = "Reply in Roman Urdu/Hindi mix."
+
     # -------- SAVE NOTES --------
     if user_text.startswith("riyan note"):
         note_text = update.message.text[len("riyan note"):].strip()
@@ -196,6 +207,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             input=f"""
 You are Riyan — Saleem's personal AI companion.
 
+Language Mode:
+{lang_instruction}
+
+Script Preference: 
 {language_hint}
 
 Current IST time: {time_context}
@@ -446,7 +461,6 @@ Keep it short and human, not robotic.
 Create a gentle reminder message for:
 {r[2]}
 """
-
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=reminder_prompt
