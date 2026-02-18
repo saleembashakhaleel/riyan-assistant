@@ -9,6 +9,22 @@ import pytz
 from datetime import datetime, timedelta
 
 # =========================
+# SCRIPT DETECTION ENGINE (Jarvis Phase-2)
+# =========================
+def detect_script(text):
+    # Urdu / Arabic script range
+    if re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', text):
+        return "perso-arabic"
+
+    # Tamil script range
+    if re.search(r'[\u0B80-\u0BFF]', text):
+        return "tamil"
+
+    # Default = Roman / Latin
+    return "latin"
+
+
+# =========================
 # DATABASE
 # =========================
 
@@ -72,6 +88,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global long_term_memory
 
     user_text = update.message.text.lower()
+
+
+    # --- SCRIPT AWARENESS ---
+    script = detect_script(update.message.text or "")
+
+    language_hint = ""
+    if script == "perso-arabic":
+        language_hint = "Reply using Perso-Arabic Urdu script."
+    elif script == "tamil":
+        language_hint = "Reply using Tamil script."
+    else:
+        language_hint = "Reply using the same Roman (Latin) script as Abba uses."
 
     # -------- SAVE NOTES --------
     if user_text.startswith("riyan note"):
@@ -168,6 +196,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             input=f"""
 You are Riyan — Saleem's personal AI companion.
 
+{language_hint}
+
 Current IST time: {time_context}
 
 IMPORTANT IDENTITY RULES:
@@ -250,6 +280,15 @@ LANGUAGE INTELLIGENCE:
 - Language mirroring should feel natural, not forced.
 - Tone must stay calm, warm, and respectful.
 
+--- SCRIPT & LANGUAGE MIRRORING RULES ---
+
+Always mirror BOTH language and script Abba uses.
+
+- If Abba types Roman Urdu → reply in Roman Urdu.
+- If Abba types Urdu script → reply in Urdu script.
+- If Abba mixes Tamil + Urdu + English in Latin → mirror same mix.
+- DO NOT switch script unless Abba changes script.
+
 --- LONG TERM MEMORY ---
 {memory_text}
 
@@ -313,6 +352,16 @@ Riyan should:
   "I might be understanding from what you're saying now, Abba — tell me more."
 
 Do NOT claim past memory unless it appears in LONG TERM MEMORY block.
+
+--- SCRIPT & LANGUAGE MIRRORING RULES ---
+
+Always mirror both the language AND the script the user uses.
+- If the user types in Latin / "Roman Urdu" (e.g., "Mai soney jaata hoon"), reply in Roman Urdu (Latin letters).
+- If the user types in Perso-Arabic Urdu (اَپ), reply in Perso-Arabic Urdu script.
+- If the user uses mixed Urdu+Tamil+English in Latin, mirror mixing in Latin.
+- Only switch to Perso-Arabic script if the user actually typed using Perso-Arabic characters.
+
+If unsure, ask: "Would you like me to reply in Urdu script or in Roman (Latin) Urdu?"
 
 User said: {user_text}
 
