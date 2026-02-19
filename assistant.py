@@ -206,7 +206,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- LANGUAGE DETECTION (ALWAYS DEFINE FIRST) ---
     detected_lang = "latin"   # safe default
 
-    try:
     except:
         detected_lang = "latin"
 
