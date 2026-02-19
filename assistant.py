@@ -122,20 +122,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     detected_mood = detect_mood(original_text)
     detected_topic = detect_topic(original_text)
 
-# =========================
-# IMPROVED ROMAN TAMIL DETECTION
-# =========================
+    # =========================
+    # IMPROVED ROMAN TAMIL DETECTION
+    # =========================
 
-ROMAN_TAMIL_HINTS = [
-    "enna","epdi","irukku","iruka","romba","konjam","illa","vaa","po",
-    "seri","saptiya","nalla","ipo","aprom","inga","anga","machan","dei"
-]
+    ROMAN_TAMIL_HINTS = [
+        "enna","epdi","irukku","iruka","romba","konjam","illa","vaa","po",
+        "seri","saptiya","nalla","ipo","aprom","inga","anga","machan","dei"
+    ]
 
-words = re.findall(r'\b\w+\b', user_text)
+    words = re.findall(r'\b\w+\b', user_text)
 
-match_count = sum(1 for w in words if w in ROMAN_TAMIL_HINTS)
+    match_count = sum(1 for w in words if w in ROMAN_TAMIL_HINTS)
 
-roman_tamil_detected = match_count >= 2
+    roman_tamil_detected = match_count >= 2
 
     if script == "tamil":
         lang_instruction = "Reply ONLY in Chennai-style Tamil."
