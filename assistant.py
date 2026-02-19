@@ -104,6 +104,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- STRICT LANGUAGE LOCK (Jarvis Fix) ---
 
     lang_instruction = ""
+    ROMAN_TAMIL_HINTS = [
+        "enna", "epdi", "irukku", "romba", "konjam",
+        "illa", "vaa", "po", "seri", "saptiya",
+        "nalla", "kastam", "enna panra", "veenum",
+        "venam", "ipo", "aprom", "inga", "anga"
+    ]
+
+    roman_tamil_detected = any(
+        word in user_text.lower() for word in ROMAN_TAMIL_HINTS
+    )
 
     urdu_hindi_words = [
         "abhi","hai","kya","lag","raha","hoon","kar","mein","tum",
@@ -111,18 +121,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     detected_lang = locals().get("detected_lang", "latin")
-    if detected_lang == "latin":
+  
+    if detected_lang == "tamil":
+        lang_instruction = "Reply ONLY in Tamil (தமிழ்)."
 
-        # Check if Abba is actually speaking Roman Urdu/Hindi
-        if any(word in user_text.lower() for word in urdu_hindi_words):
-            lang_instruction = "Reply in natural Roman Urdu/Hindi mix like Abba speaks."
-        else:
-            lang_instruction = "Reply ONLY in English unless Abba mixes languages."
+    elif roman_tamil_detected:
+        lang_instruction = (
+            "Reply in Roman Tamil (spoken Chennai Tamil in English letters). "
+            "Do NOT switch to English. Keep it natural and local."
+        )
 
-    elif script == "tamil":
-        lang_instruction = "Reply in casual Chennai Tamil."
-    elif script == "perso-arabic":
-        lang_instruction = "Reply in Roman Urdu/Hindi mix."
+    elif detected_lang == "urdu":
+        lang_instruction = "Reply in Roman Urdu."
+
+    elif detected_lang == "hindi":
+        lang_instruction = "Reply in Roman Hindi."
+
+    else:
+        lang_instruction = "Reply ONLY in English."
 
     # -------- SAVE NOTES --------
     if user_text.startswith("riyan note"):
@@ -320,6 +336,7 @@ Priority order:
 Never switch to Roman Urdu automatically.
 Roman Urdu is NOT default language.
 Language must follow Abba’s latest message.
+If Abba writes Tamil in English letters, respond in natural Chennai-style Roman Tamil.
 
 
 --- SCRIPT & LANGUAGE MIRRORING RULES ---
