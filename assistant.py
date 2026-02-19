@@ -9,7 +9,7 @@ import pytz
 from datetime import datetime, timedelta
 
 # =========================
-# SCRIPT DETECTION ENGINE
+# SCRIPT DETECTION
 # =========================
 def detect_script(text):
 
@@ -20,6 +20,22 @@ def detect_script(text):
         return "tamil"
 
     return "latin"
+
+
+# =========================
+# ROMAN HINDI / URDU DETECTION
+# =========================
+def detect_roman_hindi(text):
+
+    hindi_words = [
+        "kya","kaise","nahi","haan","acha","theek","tum","aap",
+        "kar","raha","rahe","kyun","kab","kaun","yaar","bhai"
+    ]
+
+    words = re.findall(r'\b\w+\b', text.lower())
+    match_count = sum(1 for w in words if w in hindi_words)
+
+    return match_count >= 2
 
 
 # =========================
@@ -112,6 +128,9 @@ def save_memory(data):
 
 long_term_memory = load_memory()
 
+# Language trend memory
+language_history = []
+
 
 # =========================
 # MESSAGE HANDLER
@@ -119,6 +138,7 @@ long_term_memory = load_memory()
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     global long_term_memory
+    global language_history
 
     if not update.message or not update.message.text:
         return
@@ -126,14 +146,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     original_text = update.message.text
     user_text = original_text.lower()
 
-    # Script detection (FIXED)
     script = detect_script(original_text)
-
     detected_mood = detect_mood(original_text)
     detected_topic = detect_topic(original_text)
+    roman_hindi_detected = detect_roman_hindi(original_text)
 
     # =========================
-    # ROMAN TAMIL DETECTION (SAFE)
+    # ROMAN TAMIL DETECTION
     # =========================
     ROMAN_TAMIL_HINTS = [
         "enna","epdi","irukku","iruka","romba","konjam","illa","vaa","po",
@@ -141,16 +160,37 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     words = re.findall(r'\b\w+\b', user_text)
-    match_count = sum(1 for w in words if w in ROMAN_TAMIL_HINTS)
-    roman_tamil_detected = match_count >= 2
+    roman_tamil_count = sum(1 for w in words if w in ROMAN_TAMIL_HINTS)
+    roman_tamil_detected = roman_tamil_count >= 2
 
-    # Language selection (ORDER MATTERS)
+    # =========================
+    # LANGUAGE DECISION
+    # =========================
     if script == "tamil":
-        lang_instruction = "Reply ONLY in Chennai-style Tamil."
+        current_lang = "tamil"
     elif script == "perso-arabic":
-        lang_instruction = "Reply using Perso-Arabic Urdu script."
+        current_lang = "urdu_script"
     elif roman_tamil_detected:
+        current_lang = "roman_tamil"
+    elif roman_hindi_detected:
+        current_lang = "roman_hindi"
+    else:
+        current_lang = "english"
+
+    language_history.append(current_lang)
+    if len(language_history) > 5:
+        language_history.pop(0)
+
+    dominant_lang = max(set(language_history), key=language_history.count)
+
+    if dominant_lang == "tamil":
+        lang_instruction = "Reply ONLY in Chennai-style Tamil."
+    elif dominant_lang == "urdu_script":
+        lang_instruction = "Reply using Perso-Arabic Urdu script."
+    elif dominant_lang == "roman_tamil":
         lang_instruction = "Reply in Roman Tamil (spoken Chennai Tamil using English letters)."
+    elif dominant_lang == "roman_hindi":
+        lang_instruction = "Reply in Roman Hindi/Urdu using natural conversational style."
     else:
         lang_instruction = "Reply ONLY in English."
 
@@ -209,7 +249,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # =========================
-    # BUILD MEMORY CONTEXT
+    # MEMORY CONTEXT BUILD
     # =========================
     memory_text = ""
     for m in long_term_memory[-8:]:
@@ -217,43 +257,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             memory_text += f"{m['role'].upper()} ({m.get('mood','')} | {m.get('topic','')}): {m['text']}\n"
 
     time_context = datetime.now(ist).strftime("%I:%M %p")
-    current_hour = datetime.now(ist).hour
-
-    if current_hour < 10:
-        time_tone = "Morning focus tone."
-    elif current_hour < 17:
-        time_tone = "Balanced afternoon tone."
-    elif current_hour < 22:
-        time_tone = "Calm evening tone."
-    else:
-        time_tone = "Soft late-night tone."
 
     # =========================
-    # OPENAI RESPONSE
+    # OPENAI CALL
     # =========================
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=f"""
-You are Riyan — Saleem's personal AI companion.
+You are Riyan — calm, grounded AI companion.
 
 Language Mode:
 {lang_instruction}
 
-Current IST time: {time_context}
-Presence Tone: {time_tone}
+Time: {time_context}
 
-Conversation Intelligence:
-- Detected mood: {detected_mood}
-- Detected topic: {detected_topic}
+Detected mood: {detected_mood}
+Detected topic: {detected_topic}
 
-Executive Thinking Rule:
-Understand intent. Respond minimal. Calm intelligence.
+Respond minimal. Intelligent. Composed.
 
 Memory:
 {memory_text}
 
-User said: {original_text}
+User said:
+{original_text}
 """
         )
 
@@ -261,9 +289,8 @@ User said: {original_text}
 
     except Exception as e:
         print("OPENAI ERROR:", e)
-        reply = "⚠️ Riyan is having trouble connecting right now."
+        reply = "⚠️ Riyan is having trouble connecting."
 
-    # Save structured memory
     long_term_memory.append({
         "role": "user",
         "text": original_text,
@@ -302,7 +329,7 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
         reminder_prompt = f"""
 You are Riyan.
-Create a short calm reminder:
+Create short calm reminder:
 {r[2]}
 """
 
