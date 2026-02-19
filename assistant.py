@@ -79,8 +79,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     global long_term_memory
 
-    user_text = update.message.text.lower()
     original_text = update.message.text
+    user_text = original_text.lower()
 
     # =========================
     # LANGUAGE & SCRIPT DETECTION
@@ -102,7 +102,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif roman_tamil_detected:
         lang_instruction = "Reply in Roman Tamil (spoken Chennai Tamil using English letters)."
     else:
-        lang_instruction = "Reply ONLY in English."
+        lang_instruction = "Reply ONLY in English."   
 
     # =========================
     # NOTES SYSTEM
