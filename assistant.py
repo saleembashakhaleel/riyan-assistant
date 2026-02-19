@@ -110,6 +110,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "kyun","acha","thoda","nahi","haan","kaise","yaar"
     ]
 
+    detected_lang = locals().get("detected_lang", "latin")
     if detected_lang == "latin":
 
         # Check if Abba is actually speaking Roman Urdu/Hindi
