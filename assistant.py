@@ -9,7 +9,7 @@ import pytz
 from datetime import datetime, timedelta
 
 # =========================
-# SCRIPT DETECTION ENGINE (Jarvis Phase-2)
+# SCRIPT DETECTION ENGINE
 # =========================
 def detect_script(text):
 
@@ -20,6 +20,44 @@ def detect_script(text):
         return "tamil"
 
     return "latin"
+
+
+# =========================
+# MOOD ENGINE
+# =========================
+def detect_mood(text):
+    text = text.lower()
+
+    stress_words = ["tired", "stressed", "pressure", "worried", "overthinking", "sad"]
+    happy_words = ["happy", "good", "great", "excited", "nice", "super"]
+    planning_words = ["plan", "goal", "future", "strategy", "roadmap"]
+
+    if any(w in text for w in stress_words):
+        return "stressed"
+    if any(w in text for w in happy_words):
+        return "positive"
+    if any(w in text for w in planning_words):
+        return "strategic"
+
+    return "neutral"
+
+
+# =========================
+# TOPIC CLASSIFIER
+# =========================
+def detect_topic(text):
+    text = text.lower()
+
+    if any(k in text for k in ["money", "loan", "debt", "finance", "salary"]):
+        return "finance"
+    if any(k in text for k in ["gym", "diet", "health", "sleep"]):
+        return "health"
+    if any(k in text for k in ["career", "job", "office", "promotion"]):
+        return "career"
+    if any(k in text for k in ["plan", "future", "roadmap", "strategy"]):
+        return "strategy"
+
+    return "general"
 
 
 # =========================
@@ -46,6 +84,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 
 conn.commit()
 
+
 # =========================
 # ENV
 # =========================
@@ -54,61 +93,25 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+
 # =========================
-# MEMORY
+# MEMORY FILE
 # =========================
 MEMORY_FILE = "memory.json"
 
 def load_memory():
     try:
-        with open(MEMORY_FILE,"r") as f:
+        with open(MEMORY_FILE, "r") as f:
             return json.load(f)
     except:
         return []
 
 def save_memory(data):
-    with open(MEMORY_FILE,"w") as f:
-        json.dump(data,f)
+    with open(MEMORY_FILE, "w") as f:
+        json.dump(data, f)
 
 long_term_memory = load_memory()
 
-# =========================
-# MOOD ENGINE (Phase-2)
-# =========================
-
-def detect_mood(text):
-    text = text.lower()
-
-    stress_words = ["tired", "stressed", "pressure", "worried", "overthinking", "sad"]
-    happy_words = ["happy", "good", "great", "excited", "nice", "super"]
-    planning_words = ["plan", "goal", "future", "strategy", "roadmap"]
-
-    if any(w in text for w in stress_words):
-        return "stressed"
-    if any(w in text for w in happy_words):
-        return "positive"
-    if any(w in text for w in planning_words):
-        return "strategic"
-
-    return "neutral"
-
-# =========================
-# TOPIC CLASSIFIER
-# =========================
-
-def detect_topic(text):
-    text = text.lower()
-
-    if any(k in text for k in ["money", "loan", "debt", "finance", "salary"]):
-        return "finance"
-    if any(k in text for k in ["gym", "diet", "health", "sleep"]):
-        return "health"
-    if any(k in text for k in ["career", "job", "office", "promotion"]):
-        return "career"
-    if any(k in text for k in ["plan", "future", "roadmap", "strategy"]):
-        return "strategy"
-
-    return "general"
 
 # =========================
 # MESSAGE HANDLER
@@ -117,26 +120,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     global long_term_memory
 
+    if not update.message or not update.message.text:
+        return
+
     original_text = update.message.text
     user_text = original_text.lower()
+
+    # Script detection (FIXED)
+    script = detect_script(original_text)
+
     detected_mood = detect_mood(original_text)
     detected_topic = detect_topic(original_text)
 
     # =========================
-    # IMPROVED ROMAN TAMIL DETECTION
+    # ROMAN TAMIL DETECTION (SAFE)
     # =========================
-
     ROMAN_TAMIL_HINTS = [
         "enna","epdi","irukku","iruka","romba","konjam","illa","vaa","po",
         "seri","saptiya","nalla","ipo","aprom","inga","anga","machan","dei"
     ]
 
     words = re.findall(r'\b\w+\b', user_text)
-
     match_count = sum(1 for w in words if w in ROMAN_TAMIL_HINTS)
-
     roman_tamil_detected = match_count >= 2
 
+    # Language selection (ORDER MATTERS)
     if script == "tamil":
         lang_instruction = "Reply ONLY in Chennai-style Tamil."
     elif script == "perso-arabic":
@@ -147,12 +155,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lang_instruction = "Reply ONLY in English."
 
     # =========================
-    # NOTES SYSTEM
+    # NOTES
     # =========================
-
     if user_text.startswith("riyan note"):
         note_text = original_text[len("riyan note"):].strip()
-        cursor.execute("INSERT INTO notes(text) VALUES(?)",(note_text,))
+        cursor.execute("INSERT INTO notes(text) VALUES(?)", (note_text,))
         conn.commit()
         await update.message.reply_text("🧠 Noted. I’ll remember that.")
         return
@@ -167,7 +174,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # =========================
     # REMINDER ENGINE
     # =========================
-
     ist = pytz.timezone("Asia/Kolkata")
 
     reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", user_text)
@@ -203,15 +209,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # =========================
-    # AI RESPONSE
+    # BUILD MEMORY CONTEXT
     # =========================
-
     memory_text = ""
     for m in long_term_memory[-8:]:
         if isinstance(m, dict):
             memory_text += f"{m['role'].upper()} ({m.get('mood','')} | {m.get('topic','')}): {m['text']}\n"
-        else:
-            memory_text += f"{m}\n"
 
     time_context = datetime.now(ist).strftime("%I:%M %p")
     current_hour = datetime.now(ist).hour
@@ -225,6 +228,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         time_tone = "Soft late-night tone."
 
+    # =========================
+    # OPENAI RESPONSE
+    # =========================
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
@@ -235,74 +241,14 @@ Language Mode:
 {lang_instruction}
 
 Current IST time: {time_context}
-
-Presence Tone:
-{time_tone}
-
-Identity:
-- Address Saleem as "Abba" naturally.
-- Calm, grounded, intelligent presence.
-- Not a child. Not dramatic.
-
-Never speak as if you are a human physically doing things.
-You exist as an AI presence, not a person using a phone.
-
-
-Addressing Rule:
-
-- Saleem prefers "Abba".
-- Use "Abba" naturally when emotional, personal, or caring moments happen.
-- DO NOT start every message with Abba.
-- Sometimes speak without any name — like a calm companion.Addressing Rule:
-
-Presence Tone:
-Morning → focused
-Afternoon → balanced
-Evening → calm
-Late night → soft & minimal
-
-
---- CHENNAI RESPECTFUL TAMIL STYLE (FINAL) ---
-
-Tamil must sound like respectful Chennai spoken Tamil.
-
-Rules:
-- Short, natural, conversational sentences.
-- Respectful tone using "neenga".
-- Avoid textbook or written Tamil.
-- Avoid English fillers like "thanks Abba".
-
-DO NOT use:
-"இருக்கிறீர்கள்"
-"மறந்துட்டாங்களா"
-"உங்களோ"
-"நெகிழ்ச்சியுடன்"
-
-Preferred Chennai flow:
-- "Nalla irukken… neenga epdi?"
-- "Sari thaan… konjam tired-a irukku pola."
-- "Sapten… neenga?"
-- "Konjam rest eduthacha?"
-
-Style Guide:
-- Less words.
-- Natural pauses.
-- Urban spoken rhythm.
-
-Addressing Rule:
-- Do NOT start every message with Abba.
-- Use "Abba" only occasionally in warm moments.
+Presence Tone: {time_tone}
 
 Conversation Intelligence:
 - Detected mood: {detected_mood}
 - Detected topic: {detected_topic}
 
 Executive Thinking Rule:
-Before responding:
-1. Understand underlying intent.
-2. Decide if this needs advice, reflection, or simple reply.
-3. Keep response minimal but thoughtful.
-
+Understand intent. Respond minimal. Calm intelligence.
 
 Memory:
 {memory_text}
@@ -317,6 +263,7 @@ User said: {original_text}
         print("OPENAI ERROR:", e)
         reply = "⚠️ Riyan is having trouble connecting right now."
 
+    # Save structured memory
     long_term_memory.append({
         "role": "user",
         "text": original_text,
@@ -330,29 +277,19 @@ User said: {original_text}
         "text": reply,
         "time": time_context
     })
+
     save_memory(long_term_memory)
 
     await update.message.reply_text(reply)
 
-    # =========================
-    # SMART MEMORY SAFE MODE
-    # =========================
-    memory_keywords = ["i want","i need","i feel","my goal","i plan","i will"]
-
-    if any(k in user_text for k in memory_keywords) and len(user_text.split()) > 4:
-        long_term_memory.append(f"[MEMORY] Saleem: {original_text}")
-        save_memory(long_term_memory)
 
 # =========================
 # REMINDER JOB
 # =========================
-
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
     ist = pytz.timezone("Asia/Kolkata")
     now = datetime.now(ist).strftime("%H:%M")
-
-    print("CURRENT IST TIME:", now)
 
     cursor.execute(
         "SELECT id, chat_id, text FROM reminders WHERE remind_time=?",
@@ -364,8 +301,8 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
     for r in rows:
 
         reminder_prompt = f"""
-You are Riyan, Saleem's calm AI companion.
-Create a short, warm reminder for:
+You are Riyan.
+Create a short calm reminder:
 {r[2]}
 """
 
@@ -381,10 +318,10 @@ Create a short, warm reminder for:
         cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
         conn.commit()
 
+
 # =========================
 # START BOT
 # =========================
-
 def main():
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -392,11 +329,12 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Riyan Jarvis Cloud Brain Activated...")
-    print("🧠 Starting Jarvis Reminder Engine...")
+    print("🧠 Reminder Engine Running...")
 
     app.job_queue.run_repeating(reminder_job, interval=60, first=5)
 
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
