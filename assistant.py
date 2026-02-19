@@ -207,7 +207,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     detected_lang = "latin"   # safe default
 
     try:
-        detected_lang = detect_script(user_text)
     except:
         detected_lang = "latin"
 
