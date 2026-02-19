@@ -206,9 +206,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- LANGUAGE DETECTION (ALWAYS DEFINE FIRST) ---
     detected_lang = "latin"   # safe default
 
-    except:
-        detected_lang = "latin"
-
     for m in long_term_memory[-12:]:
         memory_text += f"{m}\n"
 
