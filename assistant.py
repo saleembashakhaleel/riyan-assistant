@@ -73,6 +73,44 @@ def save_memory(data):
 long_term_memory = load_memory()
 
 # =========================
+# MOOD ENGINE (Phase-2)
+# =========================
+
+def detect_mood(text):
+    text = text.lower()
+
+    stress_words = ["tired", "stressed", "pressure", "worried", "overthinking", "sad"]
+    happy_words = ["happy", "good", "great", "excited", "nice", "super"]
+    planning_words = ["plan", "goal", "future", "strategy", "roadmap"]
+
+    if any(w in text for w in stress_words):
+        return "stressed"
+    if any(w in text for w in happy_words):
+        return "positive"
+    if any(w in text for w in planning_words):
+        return "strategic"
+
+    return "neutral"
+
+# =========================
+# TOPIC CLASSIFIER
+# =========================
+
+def detect_topic(text):
+    text = text.lower()
+
+    if any(k in text for k in ["money", "loan", "debt", "finance", "salary"]):
+        return "finance"
+    if any(k in text for k in ["gym", "diet", "health", "sleep"]):
+        return "health"
+    if any(k in text for k in ["career", "job", "office", "promotion"]):
+        return "career"
+    if any(k in text for k in ["plan", "future", "roadmap", "strategy"]):
+        return "strategy"
+
+    return "general"
+
+# =========================
 # MESSAGE HANDLER
 # =========================
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -81,6 +119,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     original_text = update.message.text
     user_text = original_text.lower()
+    detected_mood = detect_mood(original_text)
+    detected_topic = detect_topic(original_text)
 
     # =========================
     # LANGUAGE & SCRIPT DETECTION
@@ -165,10 +205,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # =========================
 
     memory_text = ""
-    for m in long_term_memory[-12:]:
-        memory_text += f"{m}\n"
+    for m in long_term_memory[-8:]:
+        if isinstance(m, dict):
+            memory_text += f"{m['role'].upper()} ({m.get('mood','')} | {m.get('topic','')}): {m['text']}\n"
+        else:
+            memory_text += f"{m}\n"
 
     time_context = datetime.now(ist).strftime("%I:%M %p")
+    current_hour = datetime.now(ist).hour
+
+    if current_hour < 10:
+        time_tone = "Morning focus tone."
+    elif current_hour < 17:
+        time_tone = "Balanced afternoon tone."
+    elif current_hour < 22:
+        time_tone = "Calm evening tone."
+    else:
+        time_tone = "Soft late-night tone."
 
     try:
         response = client.responses.create(
@@ -180,6 +233,9 @@ Language Mode:
 {lang_instruction}
 
 Current IST time: {time_context}
+
+Presence Tone:
+{time_tone}
 
 Identity:
 - Address Saleem as "Abba" naturally.
@@ -235,6 +291,17 @@ Addressing Rule:
 - Do NOT start every message with Abba.
 - Use "Abba" only occasionally in warm moments.
 
+Conversation Intelligence:
+- Detected mood: {detected_mood}
+- Detected topic: {detected_topic}
+
+Executive Thinking Rule:
+Before responding:
+1. Understand underlying intent.
+2. Decide if this needs advice, reflection, or simple reply.
+3. Keep response minimal but thoughtful.
+
+
 Memory:
 {memory_text}
 
@@ -248,8 +315,19 @@ User said: {original_text}
         print("OPENAI ERROR:", e)
         reply = "⚠️ Riyan is having trouble connecting right now."
 
-    long_term_memory.append(f"Saleem: {original_text}")
-    long_term_memory.append(f"Riyan: {reply}")
+    long_term_memory.append({
+        "role": "user",
+        "text": original_text,
+        "mood": detected_mood,
+        "topic": detected_topic,
+        "time": time_context
+    })
+
+    long_term_memory.append({
+        "role": "riyan",
+        "text": reply,
+        "time": time_context
+    })
     save_memory(long_term_memory)
 
     await update.message.reply_text(reply)
