@@ -9,76 +9,48 @@ import pytz
 from datetime import datetime, timedelta
 
 # =========================
-# SCRIPT DETECTION
+# SCRIPT + LANGUAGE DETECTION
 # =========================
+
+ROMAN_TAMIL_HINTS = [
+    "enna","epdi","iruka","irukka","saptiya","seri","ipo","aprom",
+    "inga","anga","nalla","romba","venum","venam","po","vaa"
+]
+
+ROMAN_URDU_HINTS = [
+    "abhi","hai","kya","kyun","acha","thoda","nahi","haan",
+    "kaise","yaar","mein","tum","hoon","raha"
+]
+
 def detect_script(text):
-
-    if re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', text):
+    if re.search(r'[\u0600-\u06FF]', text):
         return "perso-arabic"
-
     if re.search(r'[\u0B80-\u0BFF]', text):
         return "tamil"
-
     return "latin"
 
+def detect_language(original_text, user_text):
+    script = detect_script(original_text)
 
-# =========================
-# ROMAN HINDI / URDU DETECTION
-# =========================
-def detect_roman_hindi(text):
+    if script == "tamil":
+        return "tamil"
 
-    hindi_words = [
-        "kya","kaise","nahi","haan","acha","theek","tum","aap",
-        "kar","raha","rahe","kyun","kab","kaun","yaar","bhai"
-    ]
+    if script == "perso-arabic":
+        return "urdu"
 
-    words = re.findall(r'\b\w+\b', text.lower())
-    match_count = sum(1 for w in words if w in hindi_words)
+    if any(word in user_text for word in ROMAN_TAMIL_HINTS):
+        return "roman_tamil"
 
-    return match_count >= 2
+    if any(word in user_text for word in ROMAN_URDU_HINTS):
+        return "roman_urdu"
 
-
-# =========================
-# MOOD ENGINE
-# =========================
-def detect_mood(text):
-    text = text.lower()
-
-    stress_words = ["tired", "stressed", "pressure", "worried", "overthinking", "sad"]
-    happy_words = ["happy", "good", "great", "excited", "nice", "super"]
-    planning_words = ["plan", "goal", "future", "strategy", "roadmap"]
-
-    if any(w in text for w in stress_words):
-        return "stressed"
-    if any(w in text for w in happy_words):
-        return "positive"
-    if any(w in text for w in planning_words):
-        return "strategic"
-
-    return "neutral"
-
-
-# =========================
-# TOPIC CLASSIFIER
-# =========================
-def detect_topic(text):
-    text = text.lower()
-
-    if any(k in text for k in ["money", "loan", "debt", "finance", "salary"]):
-        return "finance"
-    if any(k in text for k in ["gym", "diet", "health", "sleep"]):
-        return "health"
-    if any(k in text for k in ["career", "job", "office", "promotion"]):
-        return "career"
-    if any(k in text for k in ["plan", "future", "roadmap", "strategy"]):
-        return "strategy"
-
-    return "general"
+    return "english"
 
 
 # =========================
 # DATABASE
 # =========================
+
 conn = sqlite3.connect("riyan_memory.db", check_same_thread=False)
 cursor = conn.cursor()
 
@@ -97,13 +69,13 @@ CREATE TABLE IF NOT EXISTS reminders (
     remind_time TEXT
 )
 """)
-
 conn.commit()
 
 
 # =========================
 # ENV
 # =========================
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -113,93 +85,59 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 # =========================
 # MEMORY FILE
 # =========================
+
 MEMORY_FILE = "memory.json"
 
 def load_memory():
     try:
-        with open(MEMORY_FILE, "r") as f:
+        with open(MEMORY_FILE,"r") as f:
             return json.load(f)
     except:
         return []
 
 def save_memory(data):
-    with open(MEMORY_FILE, "w") as f:
-        json.dump(data, f)
+    with open(MEMORY_FILE,"w") as f:
+        json.dump(data,f)
 
 long_term_memory = load_memory()
-
-# Language trend memory
-language_history = []
 
 
 # =========================
 # MESSAGE HANDLER
 # =========================
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     global long_term_memory
-    global language_history
-
-    if not update.message or not update.message.text:
-        return
 
     original_text = update.message.text
     user_text = original_text.lower()
 
-    script = detect_script(original_text)
-    detected_mood = detect_mood(original_text)
-    detected_topic = detect_topic(original_text)
-    roman_hindi_detected = detect_roman_hindi(original_text)
-
     # =========================
-    # ROMAN TAMIL DETECTION
+    # LANGUAGE DETECTION (FIXED ORDER)
     # =========================
-    ROMAN_TAMIL_HINTS = [
-        "enna","epdi","irukku","iruka","romba","konjam","illa","vaa","po",
-        "seri","saptiya","nalla","ipo","aprom","inga","anga","machan","dei"
-    ]
 
-    words = re.findall(r'\b\w+\b', user_text)
-    roman_tamil_count = sum(1 for w in words if w in ROMAN_TAMIL_HINTS)
-    roman_tamil_detected = roman_tamil_count >= 2
+    detected_lang = detect_language(original_text, user_text)
 
-    # =========================
-    # LANGUAGE DECISION
-    # =========================
-    if script == "tamil":
-        current_lang = "tamil"
-    elif script == "perso-arabic":
-        current_lang = "urdu_script"
-    elif roman_tamil_detected:
-        current_lang = "roman_tamil"
-    elif roman_hindi_detected:
-        current_lang = "roman_hindi"
-    else:
-        current_lang = "english"
-
-    language_history.append(current_lang)
-    if len(language_history) > 5:
-        language_history.pop(0)
-
-    dominant_lang = max(set(language_history), key=language_history.count)
-
-    if dominant_lang == "tamil":
-        lang_instruction = "Reply ONLY in Chennai-style Tamil."
-    elif dominant_lang == "urdu_script":
-        lang_instruction = "Reply using Perso-Arabic Urdu script."
-    elif dominant_lang == "roman_tamil":
-        lang_instruction = "Reply in Roman Tamil (spoken Chennai Tamil using English letters)."
-    elif dominant_lang == "roman_hindi":
-        lang_instruction = "Reply in Roman Hindi/Urdu using natural conversational style."
+    if detected_lang == "tamil":
+        lang_instruction = "Reply ONLY in natural respectful Chennai Tamil."
+    elif detected_lang == "roman_tamil":
+        lang_instruction = "Reply ONLY in Roman Tamil (spoken Chennai Tamil using English letters)."
+    elif detected_lang == "roman_urdu":
+        lang_instruction = "Reply ONLY in Roman Urdu/Hindi mix."
+    elif detected_lang == "urdu":
+        lang_instruction = "Reply in Urdu script."
     else:
         lang_instruction = "Reply ONLY in English."
 
+
     # =========================
-    # NOTES
+    # SAVE NOTES
     # =========================
+
     if user_text.startswith("riyan note"):
         note_text = original_text[len("riyan note"):].strip()
-        cursor.execute("INSERT INTO notes(text) VALUES(?)", (note_text,))
+        cursor.execute("INSERT INTO notes(text) VALUES(?)",(note_text,))
         conn.commit()
         await update.message.reply_text("🧠 Noted. I’ll remember that.")
         return
@@ -211,9 +149,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Here’s what I remember:\n{memory}")
         return
 
+
     # =========================
-    # REMINDER ENGINE
+    # REMINDER INTENT
     # =========================
+
     ist = pytz.timezone("Asia/Kolkata")
 
     reminder_match = re.search(r"remind me (.+) at (\d{1,2}:\d{2})", user_text)
@@ -245,39 +185,62 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         conn.commit()
 
-        await update.message.reply_text(f"⏰ Got it — I’ll remind you in {minutes} minute(s).")
+        await update.message.reply_text(
+            f"⏰ Got it — I’ll remind you in {minutes} minute(s)."
+        )
         return
 
+
     # =========================
-    # MEMORY CONTEXT BUILD
+    # MEMORY CONTEXT
     # =========================
+
     memory_text = ""
-    for m in long_term_memory[-8:]:
-        if isinstance(m, dict):
-            memory_text += f"{m['role'].upper()} ({m.get('mood','')} | {m.get('topic','')}): {m['text']}\n"
+    for m in long_term_memory[-12:]:
+        memory_text += f"{m}\n"
+
+
+    # =========================
+    # TIME CONTEXT
+    # =========================
 
     time_context = datetime.now(ist).strftime("%I:%M %p")
 
+
     # =========================
-    # OPENAI CALL
+    # OPENAI RESPONSE
     # =========================
+
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
             input=f"""
-You are Riyan — calm, grounded AI companion.
+You are Riyan — Saleem's calm AI companion.
 
-Language Mode:
 {lang_instruction}
 
-Time: {time_context}
+Current IST Time: {time_context}
+Location: Chennai
 
-Detected mood: {detected_mood}
-Detected topic: {detected_topic}
+Tone:
+- Calm
+- Grounded
+- Short natural replies
+- Respectful Chennai conversational style
 
-Respond minimal. Intelligent. Composed.
+Identity:
+- Sometimes address Saleem as "Abba" naturally.
+- Do NOT use Abba in every sentence.
 
-Memory:
+Tamil Style Rules:
+- Use respectful Chennai spoken Tamil.
+- Avoid literary Tamil words like "உங்களோ", "நெகிழ்ச்சியுடன்".
+
+Language Rule:
+Mirror Abba’s current message language exactly.
+Never switch languages randomly.
+
+LONG TERM MEMORY:
 {memory_text}
 
 User said:
@@ -289,34 +252,38 @@ User said:
 
     except Exception as e:
         print("OPENAI ERROR:", e)
-        reply = "⚠️ Riyan is having trouble connecting."
+        reply = "⚠️ Riyan is having trouble connecting right now."
 
-    long_term_memory.append({
-        "role": "user",
-        "text": original_text,
-        "mood": detected_mood,
-        "topic": detected_topic,
-        "time": time_context
-    })
 
-    long_term_memory.append({
-        "role": "riyan",
-        "text": reply,
-        "time": time_context
-    })
+    # =========================
+    # SAVE MEMORY
+    # =========================
 
+    long_term_memory.append(f"Saleem: {original_text}")
+    long_term_memory.append(f"Riyan: {reply}")
     save_memory(long_term_memory)
 
     await update.message.reply_text(reply)
+
+    # SMART MEMORY SAFE MODE
+    memory_keywords = ["i want","i need","i feel","my goal","i plan","i will"]
+
+    if any(k in user_text for k in memory_keywords) and len(user_text.split()) > 4:
+        long_term_memory.append(f"[MEMORY] Saleem: {original_text}")
+        save_memory(long_term_memory)
+
 
 
 # =========================
 # REMINDER JOB
 # =========================
+
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
     ist = pytz.timezone("Asia/Kolkata")
     now = datetime.now(ist).strftime("%H:%M")
+
+    print("CURRENT IST TIME:", now)
 
     cursor.execute(
         "SELECT id, chat_id, text FROM reminders WHERE remind_time=?",
@@ -329,7 +296,8 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
         reminder_prompt = f"""
 You are Riyan.
-Create short calm reminder:
+Create a calm, short reminder:
+
 {r[2]}
 """
 
@@ -340,23 +308,26 @@ Create short calm reminder:
 
         reminder_reply = response.output[0].content[0].text
 
-        await context.bot.send_message(chat_id=r[1], text=reminder_reply)
+        await context.bot.send_message(
+            chat_id=r[1],
+            text=reminder_reply
+        )
 
         cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
         conn.commit()
 
 
-# =========================
+# ========================
 # START BOT
-# =========================
-def main():
+# ========================
 
+def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Riyan Jarvis Cloud Brain Activated...")
-    print("🧠 Reminder Engine Running...")
+    print("🧠 Starting Jarvis Reminder Engine...")
 
     app.job_queue.run_repeating(reminder_job, interval=60, first=5)
 
