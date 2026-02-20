@@ -18,8 +18,6 @@ URDU_HINDI_WORDS = [
     "acha","thoda","nahi","haan","kaise","yaar"
 ]
 
-roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
-urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
 # PRIORITY ORDER (VERY IMPORTANT)
 
@@ -95,6 +93,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = original_text.lower()
 
     script = detect_script(original_text)
+
+    roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
+    urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
 
     # =====================================================
