@@ -4,9 +4,9 @@ from openai import OpenAI
 import os, json, sqlite3, re, pytz
 from datetime import datetime, timedelta
 
-# =========================
-# LANGUAGE & SCRIPT DETECTION (FINAL ORDER)
-# =========================
+# =====================================================
+# 🔎 SCRIPT DETECTION ENGINE
+# =====================================================
 
 ROMAN_TAMIL_HINTS = [
     "enna","epdi","irukku","romba","konjam","illa","vaa","po",
@@ -18,24 +18,15 @@ URDU_HINDI_WORDS = [
     "acha","thoda","nahi","haan","kaise","yaar"
 ]
 
+def detect_script(text):
 
-# PRIORITY ORDER (VERY IMPORTANT)
+    if re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', text):
+        return "perso-arabic"
 
-if script == "tamil":
-    lang_instruction = "Reply ONLY in respectful Chennai Tamil script."
+    if re.search(r'[\u0B80-\u0BFF]', text):
+        return "tamil"
 
-elif script == "perso-arabic":
-    lang_instruction = "Reply ONLY using Perso-Arabic Urdu script."
-
-elif urdu_hindi_detected:
-    lang_instruction = "Reply in natural Roman Urdu/Hindi mix."
-
-elif roman_tamil_detected:
-    lang_instruction = "Reply in respectful Chennai Roman Tamil."
-
-else:
-    lang_instruction = "Reply ONLY in English."
-
+    return "latin"
 
 # =====================================================
 # 💾 DATABASE
@@ -63,7 +54,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # =====================================================
-# 🧠 MEMORY ENGINE
+# 🧠 MEMORY
 # =====================================================
 
 MEMORY_FILE = "memory.json"
@@ -97,39 +88,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
     urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
-
     # =====================================================
-    # 🌐 LANGUAGE ROUTER (FINAL FIX)
+    # 🌐 FINAL LANGUAGE ROUTER (STRICT PRIORITY)
     # =====================================================
 
-    if detected_lang == "tamil":
+    if script == "tamil":
         lang_instruction = """
 Reply ONLY in respectful Chennai spoken Tamil.
 Use natural phrases like:
-"நல்லா இருக்கேன்… நீங்க எப்படி?"
+நல்லா இருக்கேன்… நீங்க எப்படி?
 Avoid literary Tamil.
 """
 
-    elif detected_lang == "roman_tamil":
-        lang_instruction = """
-Reply ONLY in Roman Tamil.
-Example tone:
-nalla iruken… neenga epdi?
-Keep Chennai style.
-"""
-
-    elif detected_lang == "roman_urdu":
-        lang_instruction = """
-Reply ONLY in Roman Urdu/Hindi mix.
-Do NOT switch to Tamil.
-"""
-
-    elif detected_lang == "urdu":
+    elif script == "perso-arabic":
         lang_instruction = "Reply ONLY in Urdu script."
+
+    elif urdu_hindi_detected:
+        lang_instruction = "Reply ONLY in Roman Urdu/Hindi mix."
+
+    elif roman_tamil_detected:
+        lang_instruction = """
+Reply ONLY in respectful Chennai Roman Tamil.
+
+Use full natural sentences like:
+nalla irukken… neenga epdi irukinga?
+saptingala?
+ipo office ah?
+
+Never use broken Tamil.
+"""
 
     else:
         lang_instruction = "Reply ONLY in English."
-
 
     # =====================================================
     # ⏰ REMINDER ENGINE
@@ -168,9 +158,8 @@ Do NOT switch to Tamil.
         await update.message.reply_text(f"⏰ Got it — I’ll remind you in {minutes} minute(s).")
         return
 
-
     # =====================================================
-    # 🧠 CONTEXT + PRESENCE ENGINE
+    # 🧠 PRESENCE ENGINE
     # =====================================================
 
     hour_now = datetime.now(ist).hour
@@ -209,47 +198,30 @@ Presence Mode: {presence_context}
 
 IMPORTANT IDENTITY RULES:
 
-- Saleem prefers to be addressed as "Abba".
-- Use "Abba" only during warm, emotional, or personal moments.
-- Do NOT use "Abba" in every reply.
-- In normal conversation, speak naturally without addressing name repeatedly.
+- Use "Abba" ONLY during warm or emotional moments.
+- Do NOT use Abba in every reply.
 
 PERSONALITY:
 Calm, intelligent, grounded.
 Short natural responses.
-Not dramatic.
-Not motivational speaker.
 
 LANGUAGE MIRRORING:
-Mirror Abba’s current language exactly.
-Never default to Tamil unless Abba uses Tamil.
+Mirror user's language EXACTLY.
+Never switch languages automatically.
 
-CHENNAI TAMIL STYLE (STRICT):
+CHENNAI TAMIL STYLE:
 
-Roman Tamil must sound like respectful Chennai spoken Tamil.
-
-Use natural complete phrases like:
-- "nalla irukken… neenga epdi irukinga?"
-- "seri… parpom"
-- "saptingala?"
-- "ipo office ah?"
-
-Always use respectful tone:
-- Use "neenga", not "nee".
-- Use endings like:
-  irukinga, panreenga, poringa, saptingala.
-
-Avoid broken or half phrases:
-❌ neenga epdi?
-❌ nalla dhaan
-❌ suthama irukka
-
-Avoid literary Tamil words.
-
-Keep Tamil short, calm, urban — like Chennai office conversation.
+Use respectful Chennai spoken Tamil.
 
 Prefer:
-நல்லா இருக்கேன்… நீங்க எப்படி?
+nalla irukken… neenga epdi irukinga?
+saptingala?
+ipo office ah?
+
+Avoid:
+neenga epdi?
+nalla dhaan
+half sentences
 
 LONG TERM MEMORY:
 {memory_text}
@@ -271,7 +243,6 @@ User said:
 
     await update.message.reply_text(reply)
 
-
 # =====================================================
 # 🔔 REMINDER JOB
 # =====================================================
@@ -291,7 +262,7 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
     for r in rows:
 
         reminder_prompt = f"""
-Speak like Riyan — calm, human reminder.
+Speak like Riyan — calm human reminder.
 
 Reminder:
 {r[2]}
@@ -309,7 +280,6 @@ Reminder:
         cursor.execute("DELETE FROM reminders WHERE id=?", (r[0],))
         conn.commit()
 
-
 # =====================================================
 # 🚀 START BOT
 # =====================================================
@@ -326,7 +296,6 @@ def main():
     app.job_queue.run_repeating(reminder_job, interval=60, first=5)
 
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
