@@ -8,8 +8,6 @@ from datetime import datetime, timedelta
 # LANGUAGE & SCRIPT DETECTION (FINAL ORDER)
 # =========================
 
-script = detect_script(original_text)
-
 ROMAN_TAMIL_HINTS = [
     "enna","epdi","irukku","romba","konjam","illa","vaa","po",
     "seri","saptiya","nalla","ipo","aprom","inga","anga"
@@ -96,7 +94,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     original_text = update.message.text
     user_text = original_text.lower()
 
-    detected_lang = detect_language(original_text)
+    script = detect_script(original_text)
+
 
     # =====================================================
     # 🌐 LANGUAGE ROUTER (FINAL FIX)
