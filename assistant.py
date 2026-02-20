@@ -4,35 +4,41 @@ from openai import OpenAI
 import os, json, sqlite3, re, pytz
 from datetime import datetime, timedelta
 
-# =====================================================
-# 🔎 LANGUAGE + SCRIPT DETECTION ENGINE
-# =====================================================
+# =========================
+# LANGUAGE & SCRIPT DETECTION (FINAL ORDER)
+# =========================
 
-ROMAN_TAMIL_WORDS = [
-    "enna","epdi","iruka","iruken","saptiya","seri","ipo","aprom","inga","anga"
+script = detect_script(original_text)
+
+ROMAN_TAMIL_HINTS = [
+    "enna","epdi","irukku","romba","konjam","illa","vaa","po",
+    "seri","saptiya","nalla","ipo","aprom","inga","anga"
 ]
 
-ROMAN_URDU_WORDS = [
-    "abhi","kya","hai","lag","raha","hoon","acha","nahi","kaise","kyun"
+URDU_HINDI_WORDS = [
+    "abhi","hai","kya","lag","raha","mein","tum","kyun",
+    "acha","thoda","nahi","haan","kaise","yaar"
 ]
 
-def detect_language(text):
+roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
+urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
-    if re.search(r'[\u0B80-\u0BFF]', text):
-        return "tamil"
+# PRIORITY ORDER (VERY IMPORTANT)
 
-    if re.search(r'[\u0600-\u06FF]', text):
-        return "urdu"
+if script == "tamil":
+    lang_instruction = "Reply ONLY in respectful Chennai Tamil script."
 
-    low = text.lower()
+elif script == "perso-arabic":
+    lang_instruction = "Reply ONLY using Perso-Arabic Urdu script."
 
-    if any(w in low for w in ROMAN_TAMIL_WORDS):
-        return "roman_tamil"
+elif urdu_hindi_detected:
+    lang_instruction = "Reply in natural Roman Urdu/Hindi mix."
 
-    if any(w in low for w in ROMAN_URDU_WORDS):
-        return "roman_urdu"
+elif roman_tamil_detected:
+    lang_instruction = "Reply in respectful Chennai Roman Tamil."
 
-    return "english"
+else:
+    lang_instruction = "Reply ONLY in English."
 
 
 # =====================================================
