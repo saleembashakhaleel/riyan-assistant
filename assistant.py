@@ -89,16 +89,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
     # =====================================================
-    # 🌐 FINAL LANGUAGE ROUTER (STRICT PRIORITY)
+    # 🌐 FINAL LANGUAGE ROUTER (HARD LOCK FIX)
     # =====================================================
 
+    # STRICT CURRENT MESSAGE LANGUAGE ONLY
+    # Memory must NOT influence language
+
     if script == "tamil":
-        lang_instruction = """
-Reply ONLY in respectful Chennai spoken Tamil.
-Use natural phrases like:
-நல்லா இருக்கேன்… நீங்க எப்படி?
-Avoid literary Tamil.
-"""
+        lang_instruction = "Reply ONLY in respectful Chennai Tamil script."
 
     elif script == "perso-arabic":
         lang_instruction = "Reply ONLY in Urdu script."
@@ -107,16 +105,7 @@ Avoid literary Tamil.
         lang_instruction = "Reply ONLY in Roman Urdu/Hindi mix."
 
     elif roman_tamil_detected:
-        lang_instruction = """
-Reply ONLY in respectful Chennai Roman Tamil.
-
-Use full natural sentences like:
-nalla irukken… neenga epdi irukinga?
-saptingala?
-ipo office ah?
-
-Never use broken Tamil.
-"""
+        lang_instruction = "Reply ONLY in respectful Chennai Roman Tamil."
 
     else:
         lang_instruction = "Reply ONLY in English."
@@ -212,11 +201,6 @@ Never switch languages automatically.
 CHENNAI TAMIL STYLE:
 
 Use respectful Chennai spoken Tamil.
-
-Prefer:
-nalla irukken… neenga epdi irukinga?
-saptingala?
-ipo office ah?
 
 Avoid:
 neenga epdi?
