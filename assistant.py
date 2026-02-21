@@ -583,6 +583,8 @@ Language Priority Lock:
 Follow lang_instruction STRICTLY.
 Never override language based on past messages.
 Only current message decides language.
+If lang_instruction is Roman Urdu/Hindi or English:
+NEVER end sentences with Tamil words like "irukku", "seri", "sapten".
 
 
 LONG TERM MEMORY:
