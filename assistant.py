@@ -305,6 +305,30 @@ Avoid repeating greetings or calling Abba unnecessarily.
 
     context_instruction = ", ".join(context_tags) if context_tags else "normal"
 
+
+
+    # =====================================================
+    # 🧠 CONVERSATION INTELLIGENCE ENGINE (Jarvis Phase-3.5)
+    # =====================================================
+
+    conversation_mode = "neutral"
+
+    # Detect short casual flow
+    if len(user_text.split()) <= 3:
+        conversation_mode = "minimal"
+
+    # Detect reflective or low energy tone
+    elif emotional_temp == "low":
+        conversation_mode = "soft"
+
+    # Detect work / task mode
+    elif any(w in user_text for w in ["office","work","task","meeting","plan"]):
+        conversation_mode = "focused"
+
+    # Detect casual playful tone
+    elif any(w in user_text for w in ["haha","ok","seri","hmm"]):
+        conversation_mode = "light"
+
 	
     # =====================================================
     # 🧾 MEMORY BLOCK
@@ -335,6 +359,7 @@ Identity Mode: {identity_instruction}
 Real World Presence State: {presence_state}
 Emotional Temperature: {emotional_temp}
 Context Tags: {context_instruction}
+Conversation Mode: {conversation_mode}
 
 
 --- REAL WORLD PRESENCE STATE ---
