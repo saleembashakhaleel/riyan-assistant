@@ -265,6 +265,27 @@ Avoid repeating greetings or calling Abba unnecessarily.
     {last_ai}
     """
 
+
+    # =====================================================
+    # 🌡️ EMOTIONAL TEMPERATURE ENGINE (Jarvis Phase-3)
+    # =====================================================
+
+    emotional_temp = "neutral"
+
+    low_energy_words = ["tired", "sleep", "late", "rest", "busy"]
+    focused_words = ["work", "office", "plan", "task"]
+    light_words = ["haha", "lol", "seri", "ok", "haan"]
+
+    if any(w in user_text for w in low_energy_words):
+        emotional_temp = "low"
+
+    elif any(w in user_text for w in focused_words):
+        emotional_temp = "focused"
+
+    elif any(w in user_text for w in light_words):
+        emotional_temp = "light"
+
+
     # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
@@ -292,6 +313,8 @@ Presence Mode: {presence_context}
 Flow Mode: {flow_instruction}
 Identity Mode: {identity_instruction}
 Real World Presence State: {presence_state}
+Emotional Temperature: {emotional_temp}
+
 
 --- REAL WORLD PRESENCE STATE ---
 Current situation of Abba: {presence_state}
