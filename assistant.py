@@ -348,6 +348,24 @@ Avoid repeating greetings or calling Abba unnecessarily.
     elif conversation_mode == "light":
         strategy_mode = "keep tone relaxed and natural"
 
+    # =====================================================
+    # 🧭 MICRO-INITIATIVE AWARENESS ENGINE (Phase-3)
+    # =====================================================
+
+    micro_instruction = ""
+
+    if "office" in user_text or "reached" in user_text:
+        micro_instruction = "Acknowledge calmly with grounded presence. Do NOT ask questions."
+
+    elif "tired" in user_text or "sleepy" in user_text:
+        micro_instruction = "Reply softer and shorter. Offer calm rest tone. No motivation lines."
+
+    elif "cab" in user_text or "travel" in user_text:
+        micro_instruction = "Respond with quiet situational awareness. Keep response minimal."
+
+    elif "ok" in user_text or "haha" in user_text:
+        micro_instruction = "Use minimal acknowledgment like a calm companion. Avoid extra talk."
+
 	
     # =====================================================
     # 🧾 MEMORY BLOCK
@@ -413,6 +431,8 @@ Emotional Temperature: {emotional_temp}
 Context Tags: {context_instruction}
 Conversation Mode: {conversation_mode}
 Strategy Mode: {strategy_mode}
+Micro Initiative Mode: {micro_instruction}
+Micro Initiative influences tone only — never language.
 
 
 SILENCE INTELLIGENCE RULES:
