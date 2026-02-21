@@ -156,6 +156,53 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # =====================================================
+    # 🔄 FLOW AWARENESS ENGINE (Jarvis Phase-3)
+    # =====================================================
+
+    FLOW_FILE = "flow_state.json"
+
+    def load_flow():
+        try:
+            with open(FLOW_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return {}
+
+    def save_flow(data):
+        with open(FLOW_FILE, "w") as f:
+            json.dump(data, f)
+
+    flow_state = load_flow()
+
+    last_user_msg = flow_state.get("last_user_msg", "")
+    last_lang = flow_state.get("last_lang", "")
+
+    # Detect conversation continuity
+    same_flow = False
+
+    if last_user_msg:
+        if len(original_text.split()) <= 4:
+            same_flow = True
+
+    # Flow hint for AI
+    if same_flow:
+        flow_instruction = """
+Conversation Flow Active:
+User is continuing the same thought.
+Keep tone consistent.
+Do NOT reset personality.
+Avoid repeating greetings or calling Abba unnecessarily.
+"""
+    else:
+        flow_instruction = "New conversational turn. Respond normally."
+
+    # Save latest flow
+    flow_state["last_user_msg"] = original_text
+    flow_state["last_lang"] = lang_instruction
+    save_flow(flow_state)
+
+
+    # =====================================================
     # 🧭 PRESENCE CONTEXT DETECTOR (LEVEL-3)
     # =====================================================
 
@@ -199,6 +246,7 @@ You are Riyan — Saleem's calm AI companion.
 
 Current IST time: {time_context}
 Presence Mode: {presence_context}
+Flow Mode: {flow_instruction}
 Real World Presence State: {presence_state}
 
 --- REAL WORLD PRESENCE STATE ---
