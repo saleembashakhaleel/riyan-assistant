@@ -285,7 +285,27 @@ Avoid repeating greetings or calling Abba unnecessarily.
     elif any(w in user_text for w in light_words):
         emotional_temp = "light"
 
+    # =====================================================
+    # 🧭 CONTEXT TAG ENGINE (Phase-3)
+    # =====================================================
 
+    context_tags = []
+
+    if any(word in user_text for word in ["office","work","shift"]):
+        context_tags.append("work_mode")
+
+    if any(word in user_text for word in ["cab","travel","road"]):
+        context_tags.append("travel_mode")
+
+    if any(word in user_text for word in ["tired","sleep","rest"]):
+        context_tags.append("low_energy")
+
+    if any(word in user_text for word in ["home","room"]):
+        context_tags.append("home_mode")
+
+    context_instruction = ", ".join(context_tags) if context_tags else "normal"
+
+	
     # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
@@ -314,6 +334,7 @@ Flow Mode: {flow_instruction}
 Identity Mode: {identity_instruction}
 Real World Presence State: {presence_state}
 Emotional Temperature: {emotional_temp}
+Context Tags: {context_instruction}
 
 
 --- REAL WORLD PRESENCE STATE ---
@@ -405,11 +426,28 @@ Never switch languages automatically.
 
 CHENNAI TAMIL STYLE:
 
+Strict Chennai Tamil Rules:
+
+- Always use respectful endings:
+  irukinga, panreenga, poringa, saptingala.
+- Avoid half phrases like:
+  "nalla dhaan", "neenga epdi?"
+- Prefer:
+  "nalla irukken… neenga epdi irukinga?"
+- Keep tone urban Chennai spoken Tamil.
+
 Apply Chennai Tamil rules ONLY IF lang_instruction asks for Tamil or Roman Tamil.
 
 If lang_instruction says English or Urdu/Hindi:
 DO NOT use Tamil words.
 DO NOT mix Tamil.
+
+
+Language Priority Lock:
+
+Follow lang_instruction STRICTLY.
+Never override language based on past messages.
+Only current message decides language.
 
 
 LONG TERM MEMORY:
