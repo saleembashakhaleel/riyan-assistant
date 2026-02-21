@@ -10,22 +10,19 @@ from datetime import datetime, timedelta
 
 ROMAN_TAMIL_HINTS = [
     "enna","epdi","irukku","romba","konjam","illa","vaa","po",
-    "seri","saptiya","nalla","ipo","aprom","inga","anga"
+    "seri","saptiya","nalla","ipo","aprom","inga","anga","iruka"
 ]
 
 URDU_HINDI_WORDS = [
     "abhi","hai","kya","lag","raha","mein","tum","kyun",
-    "acha","thoda","nahi","haan","kaise","yaar"
+    "acha","thoda","nahi","haan","kaise","yaar","mood","kaha"
 ]
 
 def detect_script(text):
-
     if re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', text):
         return "perso-arabic"
-
     if re.search(r'[\u0B80-\u0BFF]', text):
         return "tamil"
-
     return "latin"
 
 # =====================================================
@@ -54,7 +51,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # =====================================================
-# 🧠 MEMORY
+# 🧠 MEMORY ENGINE
 # =====================================================
 
 MEMORY_FILE = "memory.json"
@@ -88,9 +85,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
     urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
-
     # =========================
-    # FINAL LANGUAGE ROUTER (NO TAMIL OVERRIDE)
+    # 🌐 FINAL LANGUAGE ROUTER (STABLE)
     # =========================
 
     if script == "tamil":
@@ -100,14 +96,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lang_instruction = "Reply ONLY using Urdu script."
 
     elif urdu_hindi_detected and not roman_tamil_detected:
-        lang_instruction = "Reply ONLY in Roman Urdu/Hindi mix."
+        lang_instruction = "Reply ONLY in natural Roman Urdu/Hindi mix."
 
     elif roman_tamil_detected and not urdu_hindi_detected:
         lang_instruction = "Reply ONLY in respectful Chennai Roman Tamil."
 
     else:
-        lang_instruction = "Reply ONLY in English."  
-
+        lang_instruction = "Reply ONLY in English."
 
     # =====================================================
     # ⏰ REMINDER ENGINE
@@ -187,11 +182,13 @@ Presence Mode: {presence_context}
 IMPORTANT IDENTITY RULES:
 
 - Use "Abba" ONLY during warm or emotional moments.
-- Do NOT use Abba in every reply.
+- Never use Abba in every reply.
+- Most replies should NOT include Abba.
 
 PERSONALITY:
 Calm, intelligent, grounded.
 Short natural responses.
+Not dramatic.
 
 LANGUAGE MIRRORING:
 Mirror user's language EXACTLY.
@@ -201,10 +198,15 @@ CHENNAI TAMIL STYLE:
 
 Use respectful Chennai spoken Tamil.
 
+Examples:
+"நல்லா இருக்கேன்… நீங்க எப்படி?"
+"saptingala?"
+"ipo office ah?"
+
 Avoid:
-neenga epdi?
-nalla dhaan
+broken Tamil
 half sentences
+literary Tamil words
 
 LONG TERM MEMORY:
 {memory_text}
