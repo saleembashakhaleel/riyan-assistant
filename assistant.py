@@ -88,27 +88,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
     urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
-    # =====================================================
-    # 🌐 FINAL LANGUAGE ROUTER (HARD LOCK FIX)
-    # =====================================================
 
-    # STRICT CURRENT MESSAGE LANGUAGE ONLY
-    # Memory must NOT influence language
+    # =========================
+    # FINAL LANGUAGE ROUTER (NO TAMIL OVERRIDE)
+    # =========================
 
     if script == "tamil":
         lang_instruction = "Reply ONLY in respectful Chennai Tamil script."
 
     elif script == "perso-arabic":
-        lang_instruction = "Reply ONLY in Urdu script."
+        lang_instruction = "Reply ONLY using Urdu script."
 
-    elif urdu_hindi_detected:
+    elif urdu_hindi_detected and not roman_tamil_detected:
         lang_instruction = "Reply ONLY in Roman Urdu/Hindi mix."
 
-    elif roman_tamil_detected:
+    elif roman_tamil_detected and not urdu_hindi_detected:
         lang_instruction = "Reply ONLY in respectful Chennai Roman Tamil."
 
     else:
-        lang_instruction = "Reply ONLY in English."
+        lang_instruction = "Reply ONLY in English."  
+
 
     # =====================================================
     # ⏰ REMINDER ENGINE
