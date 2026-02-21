@@ -529,6 +529,11 @@ Rules:
 Always maintain respectful Chennai tone.
 Prefer "neenga" instead of "nee/unakku".
 
+Avoid English filler words like "thanks", "okay", "fine" inside Tamil sentences unless Abba used English.
+
+Prefer simple endings:
+irukinga (not irukkenga).
+
 Examples:
 Ni epdi iruka → Nalla irukken.
 Saptiya → Sapten.
