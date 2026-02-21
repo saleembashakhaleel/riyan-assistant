@@ -243,6 +243,29 @@ Avoid repeating greetings or calling Abba unnecessarily.
 
 
     # =====================================================
+    # 🔁 CONTEXT CONTINUITY ENGINE (Jarvis Phase-3)
+    # =====================================================
+
+    recent_context = ""
+
+    if len(long_term_memory) >= 2:
+
+        last_user = ""
+        last_ai = ""
+
+        if "Saleem:" in long_term_memory[-2]:
+            last_user = long_term_memory[-2]
+
+        if "Riyan:" in long_term_memory[-1]:
+            last_ai = long_term_memory[-1]
+
+        recent_context = f"""
+    Recent Flow Awareness:
+    {last_user}
+    {last_ai}
+    """
+
+    # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
 
@@ -311,6 +334,9 @@ DO NOT mix Tamil.
 
 LONG TERM MEMORY:
 {memory_text}
+
+RECENT FLOW CONTEXT:
+{recent_context}
 
 User said:
 {original_text}
