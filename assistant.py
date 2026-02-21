@@ -329,6 +329,25 @@ Avoid repeating greetings or calling Abba unnecessarily.
     elif any(w in user_text for w in ["haha","ok","seri","hmm"]):
         conversation_mode = "light"
 
+
+    # =====================================================
+    # 🧠 STRATEGIC THINKING ENGINE (Jarvis Core)
+    # =====================================================
+
+    strategy_mode = "neutral"
+
+    if conversation_mode == "minimal":
+        strategy_mode = "keep responses very short and grounded"
+
+    elif emotional_temp == "low":
+        strategy_mode = "respond gently, avoid advice unless necessary"
+
+    elif "office" in user_text or "work" in user_text:
+        strategy_mode = "be practical and calm, avoid emotional tone"
+
+    elif conversation_mode == "light":
+        strategy_mode = "keep tone relaxed and natural"
+
 	
     # =====================================================
     # 🧾 MEMORY BLOCK
@@ -360,6 +379,7 @@ Real World Presence State: {presence_state}
 Emotional Temperature: {emotional_temp}
 Context Tags: {context_instruction}
 Conversation Mode: {conversation_mode}
+Strategy Mode: {strategy_mode}
 
 
 --- REAL WORLD PRESENCE STATE ---
