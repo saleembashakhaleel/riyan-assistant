@@ -154,6 +154,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         presence_context = "Evening. Calm and relaxed tone."
 
+
+    # =====================================================
+    # 🧭 PRESENCE CONTEXT DETECTOR (LEVEL-3)
+    # =====================================================
+
+    presence_state = "normal"
+
+    travel_words = ["cab", "travel", "driving", "on the way", "road", "traffic"]
+    work_words = ["office", "meeting", "work", "shift", "task"]
+    rest_words = ["sleep", "tired", "rest", "late night", "going to bed"]
+
+    if any(w in user_text for w in travel_words):
+        presence_state = "travel"
+
+    elif any(w in user_text for w in work_words):
+        presence_state = "work"
+
+    elif any(w in user_text for w in rest_words):
+        presence_state = "rest"
+
+
     # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
@@ -178,6 +199,21 @@ You are Riyan — Saleem's calm AI companion.
 
 Current IST time: {time_context}
 Presence Mode: {presence_context}
+Real World Presence State: {presence_state}
+
+--- REAL WORLD PRESENCE STATE ---
+Current situation of Abba: {presence_state}
+
+Behavior rules:
+
+- travel → keep replies shorter, safe, calm.
+- work → be practical, clear, minimal.
+- rest → softer tone, fewer words.
+- normal → natural balanced tone.
+
+Presence state must NEVER change language.
+Only adjust tone subtly.
+
 
 IMPORTANT IDENTITY RULES:
 
