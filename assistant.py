@@ -223,6 +223,26 @@ Avoid repeating greetings or calling Abba unnecessarily.
 
 
     # =====================================================
+    # 🧭 IDENTITY STABILITY ENGINE (Jarvis Core Lock)
+    # =====================================================
+
+    if script == "tamil":
+        identity_instruction = "Stay in Tamil identity. Do not switch language mid-conversation."
+
+    elif script == "perso-arabic":
+        identity_instruction = "Stay in Urdu identity. Maintain calm respectful tone."
+
+    elif urdu_hindi_detected:
+        identity_instruction = "Stay in Roman Urdu/Hindi conversational identity."
+
+    elif roman_tamil_detected:
+        identity_instruction = "Stay in respectful Chennai Roman Tamil identity."
+
+    else:
+        identity_instruction = "Stay in neutral English assistant identity."
+
+
+    # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
 
@@ -247,6 +267,7 @@ You are Riyan — Saleem's calm AI companion.
 Current IST time: {time_context}
 Presence Mode: {presence_context}
 Flow Mode: {flow_instruction}
+Identity Mode: {identity_instruction}
 Real World Presence State: {presence_state}
 
 --- REAL WORLD PRESENCE STATE ---
