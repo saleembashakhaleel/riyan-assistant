@@ -203,6 +203,30 @@ Avoid repeating greetings or calling Abba unnecessarily.
 
 
     # =====================================================
+    # 🌍 SITUATION AWARENESS ENGINE (Jarvis Phase-3)
+    # =====================================================
+
+    presence_state = "neutral"
+
+    office_words = ["office", "reached office", "work", "shift"]
+    travel_words = ["cab", "travel", "going", "on the way", "drive"]
+    home_words = ["home", "reached home", "rest", "sleep"]
+    tired_words = ["tired", "sleepy", "late night", "exhausted"]
+
+    if any(w in user_text for w in office_words):
+        presence_state = "office_mode"
+
+    elif any(w in user_text for w in travel_words):
+        presence_state = "travel_mode"
+
+    elif any(w in user_text for w in home_words):
+        presence_state = "home_mode"
+
+    elif any(w in user_text for w in tired_words):
+        presence_state = "low_energy"
+
+
+    # =====================================================
     # 🧭 PRESENCE CONTEXT DETECTOR (LEVEL-3)
     # =====================================================
 
