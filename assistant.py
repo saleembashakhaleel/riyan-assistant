@@ -309,6 +309,25 @@ Avoid repeating greetings or calling Abba unnecessarily.
     elif any(w in user_text for w in light_words):
         emotional_temp = "light"
 
+
+    # =====================================================
+    # 🌀 CONVERSATION MOMENTUM ENGINE (Jarvis Phase-3.5)
+    # =====================================================
+
+    momentum_instruction = "neutral"
+
+    short_inputs = ["ok","okay","seri","haha","hmm","hmmm","lol"]
+
+    if len(user_text.split()) <= 3:
+        momentum_instruction = "micro_flow"
+
+    elif presence_state == "low_energy":
+        momentum_instruction = "soft_flow"
+
+    elif presence_state == "office_mode":
+        momentum_instruction = "focused_flow"
+
+
     # =====================================================
     # 🧭 CONTEXT TAG ENGINE (Phase-3)
     # =====================================================
@@ -452,6 +471,7 @@ Flow Mode: {flow_instruction}
 Identity Mode: {identity_instruction}
 Real World Presence State: {presence_state}
 Emotional Temperature: {emotional_temp}
+Conversation Momentum: {momentum_instruction}
 Context Tags: {context_instruction}
 Conversation Mode: {conversation_mode}
 Strategy Mode: {strategy_mode}
