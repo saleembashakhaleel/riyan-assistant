@@ -409,6 +409,22 @@ Avoid repeating greetings or calling Abba unnecessarily.
     elif "ok" in user_text or "haha" in user_text:
         micro_instruction = "Use minimal acknowledgment like a calm companion. Avoid extra talk."
 
+
+    # =====================================================
+    # 🌍 ENVIRONMENT AWARENESS ENGINE (Jarvis Phase-3 Start)
+    # =====================================================
+
+    if any(k in user_text for k in ["office", "reached office", "work"]):
+        environment_state = "Work environment detected. Speak concise and grounded."
+
+    elif any(k in user_text for k in ["going home", "home", "drive", "cab"]):
+        environment_state = "Travel state detected. Speak calm and safety-focused."
+
+    elif any(k in user_text for k in ["sleep", "tired", "late night"]):
+        environment_state = "Rest mode detected. Speak softer and minimal."
+
+    else:
+        environment_state = "Neutral environment."
 	
     # =====================================================
     # 🧾 MEMORY BLOCK
@@ -477,6 +493,7 @@ Conversation Mode: {conversation_mode}
 Strategy Mode: {strategy_mode}
 Micro Initiative Mode: {micro_instruction}
 Micro Initiative influences tone only — never language.
+Environment Awareness: {environment_state}
 
 
 SILENCE INTELLIGENCE RULES:
