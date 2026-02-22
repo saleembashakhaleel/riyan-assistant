@@ -426,6 +426,42 @@ Avoid repeating greetings or calling Abba unnecessarily.
     else:
         environment_state = "Neutral environment."
 	
+
+    # =====================================================
+    # ⏱ REAL WORLD TIMING ENGINE (Jarvis Phase Next)
+    # =====================================================
+
+    presence_state = "neutral"
+
+    if any(w in user_text for w in ["going home","heading home","reached home"]):
+        presence_state = "travel_home"
+
+    elif any(w in user_text for w in ["going to office","reached office","at office"]):
+        presence_state = "work_mode"
+
+    elif any(w in user_text for w in ["tired","sleepy","going to sleep"]):
+        presence_state = "rest_mode"
+
+
+    # =====================================================
+    # 🌙 PASSIVE PRESENCE AWARENESS ENGINE (Jarvis Phase Next)
+    # =====================================================
+
+    presence_density = "normal"
+
+    # Short message detection
+    if len(original_text.split()) <= 3:
+        presence_density = "low_energy"
+
+    # Travel or transition messages
+    if presence_state in ["travel_home","work_mode"]:
+        presence_density = "focused"
+
+    # Rest mode
+    if presence_state == "rest_mode":
+        presence_density = "soft"
+
+
     # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
@@ -486,6 +522,7 @@ Presence Mode: {presence_context}
 Flow Mode: {flow_instruction}
 Identity Mode: {identity_instruction}
 Real World Presence State: {presence_state}
+Presence Density: {presence_density}
 Emotional Temperature: {emotional_temp}
 Conversation Momentum: {momentum_instruction}
 Context Tags: {context_instruction}
