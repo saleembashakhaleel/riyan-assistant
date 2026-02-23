@@ -100,6 +100,42 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =====================================================
+# 🎙 VOICE HANDLER — JARVIS VOICE GATEWAY
+# =====================================================
+
+async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    try:
+        voice = update.message.voice
+
+        # Download voice file from Telegram
+        file = await context.bot.get_file(voice.file_id)
+
+        file_path = "voice.ogg"
+        await file.download_to_drive(file_path)
+
+        # Send to OpenAI Whisper (speech → text)
+        with open(file_path, "rb") as audio:
+            transcript = client.audio.transcriptions.create(
+                model="gpt-4o-mini-transcribe",
+                file=audio
+            )
+
+        spoken_text = transcript.text
+
+        print("VOICE TEXT:", spoken_text)
+
+        # Reuse existing message handler logic
+        update.message.text = spoken_text
+
+        await handle_message(update, context)
+
+    except Exception as e:
+        print("VOICE ERROR FULL:", str(e))
+        await update.message.reply_text("⚠️ Voice processing issue.")
+
+
+# =====================================================
 # 💬 MESSAGE HANDLER
 # =====================================================
 
