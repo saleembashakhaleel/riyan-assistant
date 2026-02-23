@@ -71,7 +71,7 @@ long_term_memory = load_memory()
 
 
 # =====================================================
-# 🎙 VOICE HANDLER — FINAL FIX (Telegram v22 SAFE)
+# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE
 # =====================================================
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -94,10 +94,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
-        # 🚨 DO NOT MODIFY update.message.text
-        # Instead call your logic manually
-
-        await process_text_message(update, context, spoken_text)
+        # ✅ DO NOT MODIFY update.message.text
+        # Inject text safely into main handler
+        await handle_message(update, context, injected_text=spoken_text)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
@@ -128,15 +127,22 @@ async def process_text_message(update, context, original_text):
         fake_update._effective_message.text = temp_text
 
 
+
+
 # =====================================================
 # 💬 MESSAGE HANDLER
 # =====================================================
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, injected_text=None):
 
     global long_term_memory
 
-    original_text = update.message.text
+    # ✅ Supports both text + voice safely
+    original_text = injected_text if injected_text else update.message.text
+
+    if not original_text:
+        return
+
     user_text = original_text.lower()
 
     script = detect_script(original_text)
