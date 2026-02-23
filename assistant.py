@@ -644,6 +644,8 @@ Short natural responses.
 Not dramatic.
 Avoid poetic or dramatic wording.
 Speak simple, natural, everyday language.
+Use natural human phrasing. Avoid meta words like "tone", "presence", "steady type".
+
 
 VOICE PRESENCE RULES (PREPARATION):
 
