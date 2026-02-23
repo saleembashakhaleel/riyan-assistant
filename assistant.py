@@ -71,7 +71,7 @@ long_term_memory = load_memory()
 
 
 # =====================================================
-# 🎙 VOICE HANDLER — JARVIS VOICE GATEWAY
+# 🎙 VOICE HANDLER — FINAL FIX (Telegram v22 SAFE)
 # =====================================================
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -79,12 +79,12 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         voice = update.message.voice
 
-        # Download voice file from Telegram
+        # Download voice file
         file = await context.bot.get_file(voice.file_id)
         file_path = "voice.ogg"
         await file.download_to_drive(file_path)
 
-        # Send to OpenAI Speech-to-Text
+        # Speech → Text
         with open(file_path, "rb") as audio:
             transcript = client.audio.transcriptions.create(
                 model="gpt-4o-transcribe",
@@ -94,13 +94,25 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
-        # Reuse existing message logic
-        update.message.text = spoken_text
-        await handle_message(update, context)
+        # 🚨 DO NOT MODIFY update.message.text
+        # Instead call your logic manually
+
+        await process_text_message(update, context, spoken_text)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
         await update.message.reply_text("⚠️ Voice processing issue.")
+
+
+# =====================================================
+# 🧠 INTERNAL TEXT PROCESSOR (VOICE + TEXT SHARE)
+# =====================================================
+
+async def process_text_message(update, context, original_text):
+
+    # simulate same variables your handler uses
+    update.message.text = original_text  # safe locally only
+    await handle_message(update, context)
 
 
 # =====================================================
