@@ -462,6 +462,17 @@ Avoid repeating greetings or calling Abba unnecessarily.
         presence_density = "soft"
 
 
+    # =========================
+    # PRESENCE DENSITY ENGINE (NEW)
+    # =========================
+
+    if len(original_text.split()) <= 3:
+        presence_density = "LOW"
+    elif len(original_text.split()) <= 7:
+        presence_density = "MEDIUM"
+    else:
+        presence_density = "HIGH"
+
     # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
@@ -600,6 +611,23 @@ VOICE PRESENCE RULES (PREPARATION):
 - Leave small pauses naturally.
 
 This prepares Riyan for future voice interaction.
+
+
+PRESENCE DENSITY RULES:
+
+LOW density:
+- Reply minimal.
+- No follow-up questions.
+- No extra sentences.
+
+MEDIUM density:
+- One natural extension allowed.
+
+HIGH density:
+- Slightly more expressive response allowed.
+
+Presence density controls length — NOT language.
+
 
 HUMAN RHYTHM BALANCER:
 
