@@ -71,6 +71,33 @@ long_term_memory = load_memory()
 
 
 # =====================================================
+# 🔊 VOICE OUTPUT ENGINE (Jarvis Phase-4.5)
+# =====================================================
+
+async def speak_reply(update, context, reply_text):
+
+    try:
+        # Convert text reply → speech audio
+        speech = client.audio.speech.create(
+            model="gpt-4o-mini-tts",
+            voice="alloy",   # calm neutral voice
+            input=reply_text
+        )
+
+        voice_file = "riyan_voice.mp3"
+
+        with open(voice_file, "wb") as f:
+            f.write(speech.content)
+
+        # Send voice back to Telegram
+        with open(voice_file, "rb") as audio:
+            await update.message.reply_voice(audio)
+
+    except Exception as e:
+        print("VOICE OUTPUT ERROR:", str(e))
+
+
+# =====================================================
 # 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE
 # =====================================================
 
@@ -1077,7 +1104,12 @@ User said:
     long_term_memory.append(f"Riyan: {reply}")
     save_memory(long_term_memory)
 
+    # Send text reply
     await update.message.reply_text(reply)
+
+    # 🔊 Voice Output Trigger (ONLY if message came from voice)
+    if update.message.voice:
+        await speak_reply(update, context, reply)
 
 # =====================================================
 # 🔔 REMINDER JOB
