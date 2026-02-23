@@ -19,10 +19,19 @@ URDU_HINDI_WORDS = [
 ]
 
 def detect_script(text):
+
+    # Urdu / Arabic
     if re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', text):
         return "perso-arabic"
+
+    # Tamil
     if re.search(r'[\u0B80-\u0BFF]', text):
         return "tamil"
+
+    # Hindi / Devanagari
+    if re.search(r'[\u0900-\u097F]', text):
+        return "hindi-script"
+
     return "latin"
 
 # =====================================================
@@ -187,6 +196,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, inj
 
     elif script == "perso-arabic":
         lang_instruction = "Reply ONLY using Urdu script."
+
+    elif script == "hindi-script":
+        lang_instruction = "Reply ONLY in Hindi (Devanagari script)."
 
     elif urdu_hindi_detected and not roman_tamil_detected:
         lang_instruction = "Reply ONLY in natural Roman Urdu/Hindi mix."
