@@ -71,35 +71,6 @@ long_term_memory = load_memory()
 
 
 # =====================================================
-# 🎙 VOICE GATEWAY ENGINE (Jarvis Phase-4 Start)
-# =====================================================
-
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    try:
-        voice = update.message.voice
-
-        file = await context.bot.get_file(voice.file_id)
-        file_path = "voice.ogg"
-
-        await file.download_to_drive(file_path)
-
-        with open(file_path, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model="gpt-4o-mini-transcribe",
-                file=audio_file
-            )
-
-        update.message.text = transcript.text
-
-        await handle_message(update, context)
-
-    except Exception as e:
-        print("VOICE ERROR:", e)
-        await update.message.reply_text("⚠️ Voice processing issue.")
-
-
-# =====================================================
 # 🎙 VOICE HANDLER — JARVIS VOICE GATEWAY
 # =====================================================
 
@@ -110,24 +81,21 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Download voice file from Telegram
         file = await context.bot.get_file(voice.file_id)
-
         file_path = "voice.ogg"
         await file.download_to_drive(file_path)
 
-        # Send to OpenAI Whisper (speech → text)
+        # Send to OpenAI Speech-to-Text
         with open(file_path, "rb") as audio:
             transcript = client.audio.transcriptions.create(
-                model="gpt-4o-mini-transcribe",
+                model="gpt-4o-transcribe",
                 file=audio
             )
 
         spoken_text = transcript.text
-
         print("VOICE TEXT:", spoken_text)
 
-        # Reuse existing message handler logic
+        # Reuse existing message logic
         update.message.text = spoken_text
-
         await handle_message(update, context)
 
     except Exception as e:
