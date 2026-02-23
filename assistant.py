@@ -473,13 +473,57 @@ Avoid repeating greetings or calling Abba unnecessarily.
     else:
         presence_density = "HIGH"
 
+
+
+    # =====================================================
+    # 🧠 MEMORY COMPRESSION ENGINE (Jarvis Phase-4)
+    # =====================================================
+
+    compressed_memory = []
+
+    # keep last meaningful exchanges only
+    for m in long_term_memory[-20:]:
+
+        text_low = m.lower()
+
+        # ignore ultra-short filler replies from Riyan
+        if any(x in text_low for x in [
+            "okay.",
+            "seri.",
+            "noted.",
+            "understood."
+        ]) and len(text_low.split()) <= 2:
+            continue
+
+        # keep emotional / situational / language signals
+        if any(k in text_low for k in [
+            "tired",
+            "office",
+            "home",
+            "mood",
+            "saptiya",
+            "epdi",
+            "feel",
+            "plan"
+        ]):
+            compressed_memory.append(m)
+
+        else:
+  
+            # keep recent few messages anyway for continuity
+            compressed_memory.append(m)
+
+    # build memory text from compressed version
+    memory_text = ""
+    for m in compressed_memory[-12:]:
+        memory_text += f"{m}\n"
+
+
+
     # =====================================================
     # 🧾 MEMORY BLOCK
     # =====================================================
 
-    memory_text = ""
-    for m in long_term_memory[-12:]:
-        memory_text += f"{m}\n"
 
     time_context = datetime.now(ist).strftime("%I:%M %p")
 
