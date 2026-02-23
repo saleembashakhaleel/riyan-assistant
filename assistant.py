@@ -85,6 +85,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
     urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
+
+    # =====================================================
+    # 🎙 VOICE GATEWAY ENGINE (Jarvis Phase-4 Start)
+    # =====================================================
+
+    async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+        try:
+            voice = update.message.voice
+
+            file = await context.bot.get_file(voice.file_id)
+            file_path = "voice.ogg"
+
+            await file.download_to_drive(file_path)
+
+            # --- OpenAI Speech to Text ---
+            with open(file_path, "rb") as audio_file:
+                transcript = client.audio.transcriptions.create(
+                    model="gpt-4o-mini-transcribe",
+                    file=audio_file
+                )
+
+            # Inject transcribed text into normal message flow
+            update.message.text = transcript.text
+
+            # Send into main brain
+            await handle_message(update, context)
+
+        except Exception as e:
+            print("VOICE ERROR:", e)
+            await update.message.reply_text("⚠️ Voice processing issue.")
+
     # =========================
     # 🌐 FINAL LANGUAGE ROUTER (STABLE)
     # =========================
@@ -1059,7 +1091,7 @@ def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print("Riyan Jarvis Cloud Brain Activated...")
     print("🧠 Starting Jarvis Reminder Engine...")
 
