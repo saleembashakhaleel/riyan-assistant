@@ -110,9 +110,22 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def process_text_message(update, context, original_text):
 
-    # simulate same variables your handler uses
-    update.message.text = original_text  # safe locally only
-    await handle_message(update, context)
+    # 🔥 DO NOT modify update.message.text
+    # Instead inject text safely into handler
+
+    fake_update = update
+
+    # store original
+    temp_text = fake_update.effective_message.text
+
+    try:
+        # safe internal override (telegram v22 compatible)
+        fake_update._effective_message.text = original_text
+        await handle_message(fake_update, context)
+
+    finally:
+        # restore original text
+        fake_update._effective_message.text = temp_text
 
 
 # =====================================================
