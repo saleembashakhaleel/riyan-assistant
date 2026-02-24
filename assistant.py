@@ -81,7 +81,7 @@ long_term_memory = load_memory()
 
 
 # =====================================================
-# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (NO FALSE ERROR)
+# 🎙️ VOICE HANDLER — FINAL STABLE (NO DUPLICATE CALLS)
 # =====================================================
 
 VOICE_TAMIL_HINTS = [
@@ -94,12 +94,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         voice = update.message.voice
 
-        # Download voice file
         file = await context.bot.get_file(voice.file_id)
         file_path = "voice.ogg"
         await file.download_to_drive(file_path)
 
-        # Speech → Text
         with open(file_path, "rb") as audio:
             transcript = client.audio.transcriptions.create(
                 model="gpt-4o-transcribe",
@@ -109,20 +107,18 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text.strip()
         print("VOICE TEXT:", spoken_text)
 
-        # 🧠 Roman Tamil safety normalization
         lower_text = spoken_text.lower()
 
         if any(w in lower_text for w in VOICE_TAMIL_HINTS):
             spoken_text = lower_text
 
-        # 🚀 Pass into main handler
+        # 🚀 Pass ONLY injected text
         await handle_message(update, context, injected_text=spoken_text)
 
-        return  # ⭐ VERY IMPORTANT — stops fake error trigger
+        return
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
-        # Only send error if NOTHING succeeded
         try:
             await update.message.reply_text("⚠️ Voice processing issue.")
         except:
@@ -179,39 +175,46 @@ async def process_text_message(update, context, original_text):
 
 
 # =====================================================
-# 💬 MESSAGE HANDLER
+# 💬 MESSAGE HANDLER — FINAL STABLE (TEXT + VOICE SAFE)
 # =====================================================
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, injected_text=None):
+async def handle_message(update: Update,
+                         context: ContextTypes.DEFAULT_TYPE,
+                         injected_text=None):
 
     global long_term_memory
 
-    # ✅ Supports both text + voice safely
-    original_text = injected_text if injected_text else update.message.text
+    # =====================================================
+    # ✅ INTERNAL TEXT PROCESSOR (VOICE + TEXT SAFE)
+    # =====================================================
 
-    if not original_text:
-        return
+    if injected_text:
+        original_text = injected_text
+    else:
+        if not update.message or not update.message.text:
+            return
+        original_text = update.message.text
 
     user_text = original_text.lower()
+
+    # =====================================================
+    # 🔎 SCRIPT DETECTION
+    # =====================================================
 
     script = detect_script(original_text)
 
     roman_tamil_detected = any(word in user_text for word in ROMAN_TAMIL_HINTS)
     urdu_hindi_detected = any(word in user_text for word in URDU_HINDI_WORDS)
 
-
-    # =========================
-    # 🌐 FINAL LANGUAGE ROUTER (STABLE)
-    # =========================
+    # =====================================================
+    # 🌐 FINAL LANGUAGE ROUTER (VOICE SAFE + STABLE)
+    # =====================================================
 
     if script == "tamil":
         lang_instruction = "Reply ONLY in respectful Chennai Tamil script."
 
     elif script == "perso-arabic":
         lang_instruction = "Reply ONLY using Urdu script."
-
-    elif script == "hindi-script":
-        lang_instruction = "Reply ONLY in Hindi (Devanagari script)."
 
     elif urdu_hindi_detected and not roman_tamil_detected:
         lang_instruction = "Reply ONLY in natural Roman Urdu/Hindi mix."
@@ -221,6 +224,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, inj
 
     else:
         lang_instruction = "Reply ONLY in English."
+
 
     # =====================================================
     # ⏰ REMINDER ENGINE
@@ -1211,16 +1215,15 @@ User said:
         print("OPENAI ERROR:",e)
         reply = "⚠️ Riyan is having trouble connecting right now."
 
+    # =====================================================
+    # 💾 SAVE MEMORY
+    # =====================================================
+
     long_term_memory.append(f"Saleem: {original_text}")
     long_term_memory.append(f"Riyan: {reply}")
     save_memory(long_term_memory)
 
-    # Send text reply
     await update.message.reply_text(reply)
-
-    # 🔊 Voice Output Trigger (ONLY if message came from voice)
-    if update.message.voice:
-        await speak_reply(update, context, reply)
 
 # =====================================================
 # 🔔 REMINDER JOB
