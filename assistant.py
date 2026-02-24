@@ -81,71 +81,53 @@ long_term_memory = load_memory()
 
 
 # =====================================================
-# 🎙️ VOICE HANDLER — FINAL STABLE (NO DUPLICATE CALLS)
+# 🎙️ VOICE HANDLER — FINAL STABLE (NORMALIZED)
 # =====================================================
-
-VOICE_TAMIL_HINTS = [
-    "saptiya","sapten","epdi","iruka","irukken",
-    "enna","inga","anga","seri","vaa","po","nalla"
-]
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         voice = update.message.voice
 
+        # Download voice file
         file = await context.bot.get_file(voice.file_id)
         file_path = "voice.ogg"
         await file.download_to_drive(file_path)
 
+        # Speech → Text
         with open(file_path, "rb") as audio:
             transcript = client.audio.transcriptions.create(
                 model="gpt-4o-transcribe",
                 file=audio
             )
 
-        spoken_text = transcript.text.strip()
+        spoken_text = transcript.text.lower().strip()
         print("VOICE TEXT:", spoken_text)
 
-        lower_text = spoken_text.lower()
-
-        if any(w in lower_text for w in VOICE_TAMIL_HINTS):
-            spoken_text = lower_text
-
-        # 🚀 Pass ONLY injected text
-        await handle_message(update, context, injected_text=spoken_text)
-
-        return
-
-    except Exception as e:
-        print("VOICE ERROR FULL:", str(e))
-        try:
-            await update.message.reply_text("⚠️ Voice processing issue.")
-        except:
-            pass
-
-
         # =====================================================
-        # 🧠 VOICE LANGUAGE NORMALIZER (CRITICAL FIX)
+        # 🎙️ VOICE NORMALIZER (VERY IMPORTANT)
         # =====================================================
 
-        lower_text = spoken_text.lower()
+        NORMALIZE_MAP = {
+            "sapdia": "saptiya",
+            "sapdia?": "saptiya",
+            "sapdya": "saptiya",
+            "eppdi": "epdi",
+            "epdi?": "epdi",
+            "irka": "iruka",
+            "irkka": "iruka"
+        }
 
-        if any(w in lower_text for w in VOICE_TAMIL_HINTS):
-            # FORCE LATIN ROUTING
-            # Prevent Urdu auto mapping
-            spoken_text = lower_text
+        for wrong, correct in NORMALIZE_MAP.items():
+            if wrong in spoken_text:
+                spoken_text = spoken_text.replace(wrong, correct)
 
-        # =====================================================
-        # 🚀 PASS TO MAIN MESSAGE HANDLER
-        # =====================================================
-
+        # Inject safely into main handler
         await handle_message(update, context, injected_text=spoken_text)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
         await update.message.reply_text("⚠️ Voice processing issue.")
-
 
 
 # =====================================================
