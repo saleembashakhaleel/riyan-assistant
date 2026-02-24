@@ -106,6 +106,7 @@ async def speak_reply(update, context, reply_text):
         print("VOICE OUTPUT ERROR:", str(e))
 
 
+
 # =====================================================
 # 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE
 # =====================================================
@@ -130,13 +131,27 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
+        # =====================================================
+        # 🎙 VOICE LANGUAGE NORMALIZER (Roman Tamil Safety)
+        # =====================================================
+
+        VOICE_TAMIL_HINTS = [
+            "saptiya","sapten","epdi","iruka","irukken",
+            "enna","inga","anga","seri","vaa","po"
+        ]
+
+        # Normalize BEFORE language router
+        if spoken_text and any(w in spoken_text.lower() for w in VOICE_TAMIL_HINTS):
+            spoken_text = spoken_text.lower()
+
         # ✅ DO NOT MODIFY update.message.text
-        # Inject text safely into main handler
+        # Inject safely into main handler
         await handle_message(update, context, injected_text=spoken_text)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
         await update.message.reply_text("⚠️ Voice processing issue.")
+
 
 
 # =====================================================
@@ -851,17 +866,28 @@ If lang_instruction says Tamil or Roman Tamil:
 Language must be decided ONLY by current message.
 Environment Awareness and Emotional engines must NOT change language.
 
+SCRIPT LOCK:
 
-FINAL LANGUAGE GUARD:
+If user types using Latin letters,
+reply ONLY using Latin letters.
+Never switch to Tamil script automatically.
 
-Language selected by lang_instruction is FINAL.
 
-No later system layer
-(presence, emotion, strategic, voice, micro initiative,
-conversation intelligence, or environment awareness)
-is allowed to change language or script.
+FINAL LANGUAGE GUARD (HARD LOCK):
 
-They may adjust tone only — never language.
+Language decided by lang_instruction is FINAL.
+
+No later engine
+- Strategic thinking
+- Emotional temperature
+- Presence density
+- Voice engines
+- Micro initiative
+may change language or script.
+
+Tone may change.
+Words may change.
+Language must NEVER change.
 
 
 CHENNAI TAMIL STYLE (HARD LOCK):
