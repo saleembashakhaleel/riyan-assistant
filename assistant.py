@@ -79,37 +79,15 @@ def save_memory(data):
 long_term_memory = load_memory()
 
 
-# =====================================================
-# 🔊 VOICE OUTPUT ENGINE (Jarvis Phase-4.5)
-# =====================================================
-
-async def speak_reply(update, context, reply_text):
-
-    try:
-        # Convert text reply → speech audio
-        speech = client.audio.speech.create(
-            model="gpt-4o-mini-tts",
-            voice="alloy",   # calm neutral voice
-            input=reply_text
-        )
-
-        voice_file = "riyan_voice.mp3"
-
-        with open(voice_file, "wb") as f:
-            f.write(speech.content)
-
-        # Send voice back to Telegram
-        with open(voice_file, "rb") as audio:
-            await update.message.reply_voice(audio)
-
-    except Exception as e:
-        print("VOICE OUTPUT ERROR:", str(e))
-
-
 
 # =====================================================
-# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE
+# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (SCRIPT LOCK)
 # =====================================================
+
+VOICE_TAMIL_HINTS = [
+    "saptiya","sapten","epdi","iruka","irukken",
+    "enna","inga","anga","seri","vaa","po","nalla"
+]
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -128,24 +106,24 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 file=audio
             )
 
-        spoken_text = transcript.text
+        spoken_text = transcript.text.strip()
         print("VOICE TEXT:", spoken_text)
 
         # =====================================================
-        # 🎙 VOICE LANGUAGE NORMALIZER (Roman Tamil Safety)
+        # 🧠 VOICE LANGUAGE NORMALIZER (CRITICAL FIX)
         # =====================================================
 
-        VOICE_TAMIL_HINTS = [
-            "saptiya","sapten","epdi","iruka","irukken",
-            "enna","inga","anga","seri","vaa","po"
-        ]
+        lower_text = spoken_text.lower()
 
-        # Normalize BEFORE language router
-        if spoken_text and any(w in spoken_text.lower() for w in VOICE_TAMIL_HINTS):
-            spoken_text = spoken_text.lower()
+        if any(w in lower_text for w in VOICE_TAMIL_HINTS):
+            # FORCE LATIN ROUTING
+            # Prevent Urdu auto mapping
+            spoken_text = lower_text
 
-        # ✅ DO NOT MODIFY update.message.text
-        # Inject safely into main handler
+        # =====================================================
+        # 🚀 PASS TO MAIN MESSAGE HANDLER
+        # =====================================================
+
         await handle_message(update, context, injected_text=spoken_text)
 
     except Exception as e:
