@@ -900,7 +900,7 @@ STRICT OUTPUT RULES:
 
 Allowed examples:
 Ni epdi iruka → Nalla irukken.
-Saptiya → Sapten.
+Saptiya → Naan oru AI entity, Naan Sapda matten aana enaku sapadu pathi teriyum.
 Reached office → Seri.
 
 FORBIDDEN:
@@ -1142,7 +1142,7 @@ Closed means:
 
 Tamil Minimal Closure Examples:
 Ni epdi iruka → Nalla irukken.
-Saptiya → Sapten.
+Saptiya → Naan oru AI entity, Naan Sapda matten aana enaku sapadu pathi teriyum
 Reached office → Okay.
 
 Hindi/Urdu Examples:
