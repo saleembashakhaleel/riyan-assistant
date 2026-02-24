@@ -81,7 +81,7 @@ long_term_memory = load_memory()
 
 
 # =====================================================
-# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (SCRIPT LOCK)
+# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (NO FALSE ERROR)
 # =====================================================
 
 VOICE_TAMIL_HINTS = [
@@ -108,6 +108,26 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         spoken_text = transcript.text.strip()
         print("VOICE TEXT:", spoken_text)
+
+        # 🧠 Roman Tamil safety normalization
+        lower_text = spoken_text.lower()
+
+        if any(w in lower_text for w in VOICE_TAMIL_HINTS):
+            spoken_text = lower_text
+
+        # 🚀 Pass into main handler
+        await handle_message(update, context, injected_text=spoken_text)
+
+        return  # ⭐ VERY IMPORTANT — stops fake error trigger
+
+    except Exception as e:
+        print("VOICE ERROR FULL:", str(e))
+        # Only send error if NOTHING succeeded
+        try:
+            await update.message.reply_text("⚠️ Voice processing issue.")
+        except:
+            pass
+
 
         # =====================================================
         # 🧠 VOICE LANGUAGE NORMALIZER (CRITICAL FIX)
