@@ -151,6 +151,30 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Voice processing issue.")
 
 
+# =====================================================
+# 🧠 INTERNAL TEXT PROCESSOR (VOICE + TEXT SHARE)
+# =====================================================
+
+async def process_text_message(update, context, original_text):
+
+    # 🔥 DO NOT modify update.message.text
+    # Instead inject text safely into handler
+
+    fake_update = update
+
+    # store original
+    temp_text = fake_update.effective_message.text
+
+    try:
+        # safe internal override (telegram v22 compatible)
+        fake_update._effective_message.text = original_text
+        await handle_message(fake_update, context)
+
+    finally:
+        # restore original text
+        fake_update._effective_message.text = temp_text
+
+
 
 # =====================================================
 # 💬 MESSAGE HANDLER
