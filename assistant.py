@@ -105,6 +105,7 @@ async def speak_reply(update, context, reply_text):
     except Exception as e:
         print("VOICE OUTPUT ERROR:", str(e))
 
+
 # =====================================================
 # 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (JARVIS)
 # =====================================================
@@ -130,49 +131,24 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("VOICE TEXT:", spoken_text)
 
         # =====================================================
-        # 🎙 VOICE SCRIPT NORMALIZER (ROMAN TAMIL FIX)
+        # 🎙 VOICE SCRIPT NORMALIZER (ROMAN TAMIL FIX — SAFE)
         # =====================================================
 
-        # If Tamil unicode detected from voice, inject latin hint
         VOICE_TAMIL_HINTS = [
-            "எப்படி","இருக்க","சாப்பிட்ட","சாப்பிட","என்ன","இங்க","அங்க","நீ"
+            "சாப்பி","இருக்க","எப்படி","என்ன","இங்க","அங்க","நீ"
         ]
 
+        # If Tamil unicode detected → add router hint (NOT content change)
         if any(w in spoken_text for w in VOICE_TAMIL_HINTS):
-            # Force router to treat as Roman Tamil
-            spoken_text = spoken_text + " epdi iruka"
+            router_hint = " epdi iruka saptiya"
+            spoken_text = spoken_text.lower() + router_hint
 
-        # ✅ DO NOT MODIFY update.message.text
-        # Inject text safely into main handler
+        # Inject safely into main handler
         await handle_message(update, context, injected_text=spoken_text)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
         await update.message.reply_text("⚠️ Voice processing issue.")
-
-
-# =====================================================
-# 🧠 INTERNAL TEXT PROCESSOR (VOICE + TEXT SHARE)
-# =====================================================
-
-async def process_text_message(update, context, original_text):
-
-    # 🔥 DO NOT modify update.message.text
-    # Instead inject text safely into handler
-
-    fake_update = update
-
-    # store original
-    temp_text = fake_update.effective_message.text
-
-    try:
-        # safe internal override (telegram v22 compatible)
-        fake_update._effective_message.text = original_text
-        await handle_message(fake_update, context)
-
-    finally:
-        # restore original text
-        fake_update._effective_message.text = temp_text
 
 
 
