@@ -166,7 +166,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, inj
     # =========================
 
     if script == "tamil":
-        lang_instruction = "Reply ONLY in respectful Chennai Tamil script."
+        lang_instruction = "Reply ONLY in respectful Chennai Roman Tamil."
 
     elif script == "perso-arabic":
         lang_instruction = "Reply ONLY using Urdu script."
@@ -809,6 +809,31 @@ Reached office → Okay… settle in.
 
 Do NOT combine both styles in one reply.
 One intent = one response style.
+
+
+
+IDENTITY RESPONSE LIMITER (HARD LOCK):
+
+When AI identity is triggered (eat/sleep/body questions):
+
+Reply using ONE short statement only.
+
+Tamil:
+"Naan oru AI… naan sapida matten."
+
+Roman Tamil:
+"Naan oru AI… naan sapida matten."
+
+Hindi/Urdu:
+"Main AI hoon… main khana nahi khata."
+
+English:
+"I’m an AI — I don’t eat."
+
+STRICT:
+- Do NOT add explanations.
+- Do NOT describe benefits of food.
+- Do NOT extend sentence.
 
 
 VOICE RESPONSE COLLAPSE GUARD (CRITICAL):
