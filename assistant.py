@@ -106,7 +106,7 @@ async def speak_reply(update, context, reply_text):
         print("VOICE OUTPUT ERROR:", str(e))
 
 
- =====================================================
+# =====================================================
 # 🎙️ VOICE HANDLER — FINAL STABLE (NO NORMALIZER)
 # =====================================================
 
