@@ -106,8 +106,8 @@ async def speak_reply(update, context, reply_text):
         print("VOICE OUTPUT ERROR:", str(e))
 
 
-# =====================================================
-# 🎙️ VOICE HANDLER — FINAL STABLE VERSION
+ =====================================================
+# 🎙️ VOICE HANDLER — FINAL STABLE (NO NORMALIZER)
 # =====================================================
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,21 +130,15 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
-        # -------------------------------------------------
-        # IMPORTANT:
-        # Only inject text ONCE into message handler
-        # -------------------------------------------------
-
-        # Attach injected text safely
+        # 🔥 IMPORTANT — Inject into main pipeline
         update.message.text = spoken_text
 
-        # Call main handler ONE TIME ONLY
+        # Send through NORMAL message brain
         await handle_message(update, context)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
         await update.message.reply_text("⚠️ Voice processing issue.")
-
 
 
 # =====================================================
