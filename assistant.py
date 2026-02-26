@@ -107,7 +107,7 @@ async def speak_reply(update, context, reply_text):
 
 
 # =====================================================
-# 🎙️ VOICE HANDLER — ULTRA STABLE FINAL VERSION
+# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (STABLE)
 # =====================================================
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -115,10 +115,12 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         voice = update.message.voice
 
+        # Download voice file
         file = await context.bot.get_file(voice.file_id)
         file_path = "voice.ogg"
         await file.download_to_drive(file_path)
 
+        # Speech → Text
         with open(file_path, "rb") as audio:
             transcript = client.audio.transcriptions.create(
                 model="gpt-4o-transcribe",
@@ -128,14 +130,12 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
-        # ✅ SAFE injection into text pipeline
-        update.message.text = spoken_text or ""
-
-        # call normal text handler
-        await handle_message(update, context)
+        # ✅ NEVER modify update.message.text
+        # Inject safely into message handler
+        await handle_message(update, context, injected_text=spoken_text)
 
     except Exception as e:
-        print("VOICE ERROR FULL:", e)
+        print("VOICE ERROR FULL:", str(e))
         await update.message.reply_text("⚠️ Voice processing issue.")
 
 
@@ -147,7 +147,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, inj
 
     global long_term_memory
 
-    # ✅ Supports both text + voice safely
+    # ✅ Supports both TEXT + VOICE safely
     original_text = injected_text if injected_text else update.message.text
 
     if not original_text:
