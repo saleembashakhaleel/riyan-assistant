@@ -107,7 +107,7 @@ async def speak_reply(update, context, reply_text):
 
 
 # =====================================================
-# 🎙️ VOICE HANDLER — FINAL TELEGRAM V22 SAFE (JARVIS)
+# 🎙️ VOICE HANDLER — FINAL STABLE VERSION
 # =====================================================
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,21 +130,16 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
-        # =====================================================
-        # 🎙 VOICE SCRIPT NORMALIZER (ROMAN TAMIL FIX — SAFE)
-        # =====================================================
+        # -------------------------------------------------
+        # IMPORTANT:
+        # Only inject text ONCE into message handler
+        # -------------------------------------------------
 
-        VOICE_TAMIL_HINTS = [
-            "சாப்பி","இருக்க","எப்படி","என்ன","இங்க","அங்க","நீ"
-        ]
+        # Attach injected text safely
+        update.message.text = spoken_text
 
-        # If Tamil unicode detected → add router hint (NOT content change)
-        if any(w in spoken_text for w in VOICE_TAMIL_HINTS):
-            router_hint = " epdi iruka saptiya"
-            spoken_text = spoken_text.lower() + router_hint
-
-        # Inject safely into main handler
-        await handle_message(update, context, injected_text=spoken_text)
+        # Call main handler ONE TIME ONLY
+        await handle_message(update, context)
 
     except Exception as e:
         print("VOICE ERROR FULL:", str(e))
