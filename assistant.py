@@ -107,7 +107,7 @@ async def speak_reply(update, context, reply_text):
 
 
 # =====================================================
-# 🎙️ VOICE HANDLER — FINAL STABLE (NO NORMALIZER)
+# 🎙️ VOICE HANDLER — ULTRA STABLE FINAL VERSION
 # =====================================================
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -115,12 +115,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         voice = update.message.voice
 
-        # Download voice file
         file = await context.bot.get_file(voice.file_id)
         file_path = "voice.ogg"
         await file.download_to_drive(file_path)
 
-        # Speech → Text
         with open(file_path, "rb") as audio:
             transcript = client.audio.transcriptions.create(
                 model="gpt-4o-transcribe",
@@ -130,14 +128,14 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         spoken_text = transcript.text
         print("VOICE TEXT:", spoken_text)
 
-        # 🔥 IMPORTANT — Inject into main pipeline
-        update.message.text = spoken_text
+        # ✅ SAFE injection into text pipeline
+        update.message.text = spoken_text or ""
 
-        # Send through NORMAL message brain
+        # call normal text handler
         await handle_message(update, context)
 
     except Exception as e:
-        print("VOICE ERROR FULL:", str(e))
+        print("VOICE ERROR FULL:", e)
         await update.message.reply_text("⚠️ Voice processing issue.")
 
 
